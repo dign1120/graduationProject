@@ -34,126 +34,16 @@ class Thread(QThread):
 
         beginTimer = time.time()
         flag = 0
+        isChecked_encrypted = False
 
         while(not self.breakPoint):
-            beginTimer, flag = run(beginTimer, flag, self.nickname)
+            beginTimer, flag, isChecked_encrypted  = run(beginTimer, flag, self.nickname, isChecked_encrypted)
         
 
     def stop(self):
         self.breakPoint = True
         self.quit()
         self.wait(3000)
-
-
-class focusThread(QThread):
-    
-    def __init__(self):
-        super().__init__()
-        self.breakPoint = False
-    
-    def run(self):
-        size = pyautogui.size()
-        while(not self.breakPoint):
-            try:
-                pyautogui.moveTo(size[0]/2, size[1]/2)
-                if keyboard.is_pressed('win'):
-                    print("win")
-                    time.sleep(0.3)
-                    pyautogui.press('winleft')
-
-            except:
-                pass
-    def stop(self):
-        self.breakPoint = True
-        self.quit()
-        self.wait(3000)
-
-
-class encryptLoadingThread(QThread):
-    def __init__(self):
-        super().__init__()
-        self.encryptLoad = EncryptLoadingClass()
-
-    def run(self):
-        self.encryptLoad.exec()
-
-    def stop(self):
-        self.quit()
-        self.encryptLoad.doneLoading()
-        self.wait(3000)
-
-
-class decryptLoadingThread(QThread):
-    def __init__(self):
-        super().__init__()
-        self.decryptLoad = DecryptLoadingClass()
-
-    def run(self):
-        self.decryptLoad.exec()
-
-    def stop(self):
-        self.quit()
-        self.decryptLoad.doneLoading()
-        self.wait(3000)
-
-
-        
-encryptLoading_form_class = uic.loadUiType("encryptLoadingGUI.ui")[0]
-decryptLoading_form_class = uic.loadUiType("decryptLoadingGUI.ui")[0]
-
-
-
-class EncryptLoadingClass(QDialog, encryptLoading_form_class):
-    def __init__(self, parent=None):
-        super().__init__()
-        self.setupUi(self)
-        self.setWindowIcon(QIcon("windowIcon.png"))
-
-        self.encryptLoadingGIF:QLabel
-
-
-        # 동적 이미지 추가
-        self.loadingmovie = QMovie('loading.gif', QByteArray(), self)
-        #print(self.movie.size())
-        self.loadingmovie.setCacheMode(QMovie.CacheAll)
-        # QLabel에 동적 이미지 삽입
-        self.encryptLoadingGIF.setMovie(self.loadingmovie)
-        self.loadingmovie.start()
-        self.show()
-        self.focusThread = focusThread()
-        self.focusThread.start()
-
-    def doneLoading(self):
-        self.focusThread.stop()
-        self.close()
-
-
-class DecryptLoadingClass(QDialog, decryptLoading_form_class):
-    def __init__(self, parent=None):
-        super().__init__()
-        self.setupUi(self)
-        self.setWindowIcon(QIcon("windowIcon.png"))
-
-        self.decryptLoadingGIF:QLabel
-
-
-        # 동적 이미지 추가
-        self.loadingmovie = QMovie('loading.gif', QByteArray(), self)
-        #print(self.movie.size())
-        self.loadingmovie.setCacheMode(QMovie.CacheAll)
-        # QLabel에 동적 이미지 삽입
-        self.decryptLoadingGIF.setMovie(self.loadingmovie)
-        self.loadingmovie.start()
-        self.show()
-        self.focusThread = focusThread()
-        self.focusThread.start()
-
-    def doneLoading(self):
-        self.focusThread.stop()
-        self.close()
-
-
-
 
 # 로그인 gui
 
@@ -258,6 +148,7 @@ class RunClass(QDialog, run_form_class):
         # start 메소드 호출 -> 자동으로 run 메소드 호출
         self.daemonThread = Thread(self.nickname)
         self.daemonThread.start()
+        print("hello")
 
     def setDB(self):
         print("setDB clicked")

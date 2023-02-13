@@ -17,13 +17,14 @@ def getSrcPath():
 
     return homePath
 
+
 def getDstPath():
-    dstPath = "C:/Program Files/PIM_AGENT"
+    dstPath = "C:/Users/Public/PIM_AGENT"
 
     return dstPath
 
 def checkDir():
-    dirPath = "C:/Program Files/PIM_AGENT"
+    dirPath = "C:/Users/Public/PIM_AGENT"
 
     if(os.path.isdir(dirPath)):
         return True
@@ -31,13 +32,5 @@ def checkDir():
         return False
 
 def makeDir():
-    ASADMIN = 'asadmin'
-    dirPath = "C:/Program Files/PIM_AGENT"
-
-    if sys.argv[-1] != ASADMIN:
-        script = os.path.abspath(sys.argv[0])
-        params = ' '.join([script] + sys.argv[1:] + [ASADMIN])
-        shell.ShellExecuteEx(lpVerb='runas', lpFile=sys.executable, lpParameters=params)
-        sys.exit()
-
+    dirPath = "C:/Users/Public/PIM_AGENT"
     os.mkdir(dirPath)

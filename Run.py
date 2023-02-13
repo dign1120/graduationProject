@@ -13,7 +13,7 @@ def initCheck():
         makeDir()
 
 
-def run(beginTimer, flag, nickname):
+def run(beginTimer, flag, nickname, isChecked_encrypted):
     check = 0
     srcPath = getSrcPath()
     dstPath = getDstPath()
@@ -30,7 +30,7 @@ def run(beginTimer, flag, nickname):
 
         beginTimer = time.time()
 
-        return beginTimer, 0
+        return beginTimer, 0 , isChecked_encrypted
     elif(check == 1 and flag == 1):
         
         os.system('taskkill /f /im chrome.exe')
@@ -38,30 +38,33 @@ def run(beginTimer, flag, nickname):
         decryptthread.start()
         # 파일 복호화 
         decrypt_all_files(dstPath, nickname)
-        decryptthread.stop()
+        
         # 파일 옮기기
         fileMove(dstPath, srcPath)
+        decryptthread.stop()
+        isChecked_encrypted  = False
 
         webbrowser.open("https://google.com")
         beginTimer = time.time()
 
-        return beginTimer, 0
+        return beginTimer, 0, isChecked_encrypted
     elif (check == 0):
-        # 파일 옮기기
-        fileMove(srcPath, dstPath)
-
         afterTimer = time.time()
 
-        if((int)(afterTimer - beginTimer) >= 10):   # 타이머 설정
-            encryptthread = encryptLoadingThread()
-            encryptthread.start()
-            # 파일 암호화
-            encrypt_all_files(dstPath, nickname)
-            encryptthread.stop()
+        if((int)(afterTimer - beginTimer) >= 1):   # 타이머 설정
+            if(isChecked_encrypted == False):
+                encryptthread = encryptLoadingThread()
+                encryptthread.start()
+                 # 파일 옮기기
+                fileMove(srcPath, dstPath)
+                # 파일 암호화
+                encrypt_all_files(dstPath, nickname)
+                encryptthread.stop()
+                isChecked_encrypted = True
 
-            return beginTimer, 1
+            return beginTimer, 1, isChecked_encrypted
         else:
-            return beginTimer, 0
+            return beginTimer, 0 , isChecked_encrypted
 
 
 def fileMove(srcPath, dstPath):

@@ -37,9 +37,12 @@ class focusThread(QThread):
 class encryptLoadingThread(QThread):
     def __init__(self):
         super().__init__()
-        self.encryptLoad = EncryptLoadingClass()
+        
 
     def run(self):
+        print("encryptLoadingThread")
+        self.encryptLoad = EncryptLoadingClass()
+        
         self.encryptLoad.exec()
 
     def stop(self):
@@ -51,9 +54,10 @@ class encryptLoadingThread(QThread):
 class decryptLoadingThread(QThread):
     def __init__(self):
         super().__init__()
-        self.decryptLoad = DecryptLoadingClass()
 
     def run(self):
+        print("decryptLoadingThread")
+        self.decryptLoad = DecryptLoadingClass()
         self.decryptLoad.exec()
 
     def stop(self):
@@ -80,11 +84,11 @@ class EncryptLoadingClass(QDialog, encryptLoading_form_class):
         self.encryptLoadingGIF.setMovie(self.loadingmovie)
         self.loadingmovie.start()
         self.show()
-        self.focusThread = focusThread()
-        self.focusThread.start()
+        #self.focusThread = focusThread()
+        #self.focusThread.start()
 
     def doneLoading(self):
-        self.focusThread.stop()
+        #self.focusThread.stop()
         self.close()
 
 
@@ -105,11 +109,11 @@ class DecryptLoadingClass(QDialog, decryptLoading_form_class):
         self.decryptLoadingGIF.setMovie(self.loadingmovie)
         self.loadingmovie.start()
         self.show()
-        self.focusThread = focusThread()
-        self.focusThread.start()
+        #self.focusThread = focusThread()
+        #self.focusThread.start()
 
     def doneLoading(self):
-        self.focusThread.stop()
+        #self.focusThread.stop()
         self.close()
 
 
