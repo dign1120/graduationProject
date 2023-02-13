@@ -1,65 +1,68 @@
 import os
 import shutil
 import psutil
-import sys
-import threading as th
+import time
+import webbrowser
 
 from RunData import checkDir, makeDir, getSrcPath, getDstPath, getControlDataNames
 from CustomCrypto import encrypt_all_files, decrypt_all_files
 from LoadingGUI import *
-
 
 def initCheck():
     if not(checkDir()):
         makeDir()
 
 
-def securityThread(check, nickname):
-    if check==0:
-        # 파일 옮기기
-        fileMove(getSrcPath, getDstPath)
-        # 파일 암호화
-        encrypt_all_files(getDstPath, nickname)
-        print("encrypt!")
-    elif check ==1:
-        # 파일 복호화 
-        decrypt_all_files(getDstPath, nickname)
-        # 파일 옮기기
-        fileMove(getDstPath, getSrcPath)
-        print("decrypt!")
-
-def run(beginTimer, nickname,loadingEncryptCheck, loadingDecryptCheck):
+def run(beginTimer, flag, nickname):
     check = 0
     srcPath = getSrcPath()
     dstPath = getDstPath()
 
-    print("run method!")
     for proc in psutil.process_iter():    # 실행중인 프로세스를 순차적으로 검색
         ps_name = proc.name()               # 프로세스 이름을 ps_name에 할당
 
         if ps_name == "chrome.exe":
             check = 1
 
-    if(check == 1):
-        if loadingDecryptCheck == 0:
-            loadingDecryptCheck =1
-            loadingEncryptCheck =0
-            decrypt = th.Thread(target = securityThread, args=[check, nickname])
-            decrypt.start()
-            decryptLoding = DecryptLoadingClass()
-            decryptLoding.exec()
-        return loadingEncryptCheck,loadingDecryptCheck
-            #app.exec_()
+    if(check == 1 and flag == 0):
+        # 파일 옮기기
+        fileMove(dstPath, srcPath)
+
+        beginTimer = time.time()
+
+        return beginTimer, 0
+    elif(check == 1 and flag == 1):
+        
+        os.system('taskkill /f /im chrome.exe')
+        decryptthread = decryptLoadingThread()
+        decryptthread.start()
+        # 파일 복호화 
+        decrypt_all_files(dstPath, nickname)
+        decryptthread.stop()
+        # 파일 옮기기
+        fileMove(dstPath, srcPath)
+
+        webbrowser.open("https://google.com")
+        beginTimer = time.time()
+
+        return beginTimer, 0
     elif (check == 0):
-        if loadingEncryptCheck == 0:
-            loadingEncryptCheck =1
-            loadingDecryptCheck =0
-            encrypt = th.Thread(target = securityThread, args = [check, nickname])
-            encrypt.start()
-            encryptLoding = EncryptLoadingClass()
-            encryptLoding.exec()
-            #app.exec_()
-        return loadingEncryptCheck,loadingDecryptCheck
+        # 파일 옮기기
+        fileMove(srcPath, dstPath)
+
+        afterTimer = time.time()
+
+        if((int)(afterTimer - beginTimer) >= 10):   # 타이머 설정
+            encryptthread = encryptLoadingThread()
+            encryptthread.start()
+            # 파일 암호화
+            encrypt_all_files(dstPath, nickname)
+            encryptthread.stop()
+
+            return beginTimer, 1
+        else:
+            return beginTimer, 0
+
 
 def fileMove(srcPath, dstPath):
     filenames = getControlDataNames()

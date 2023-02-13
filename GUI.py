@@ -1,6 +1,10 @@
 import sys
 import time
 import re
+import keyboard
+import pyautogui
+
+
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -24,26 +28,134 @@ class Thread(QThread):
         self.breakPoint = False
         self.nickname = nickname
 
+    # 쓰레드로 동작시킬 함수 내용 구현
     def run(self):
-        
-        loadingEncryptCheck = 0
-        loadingDecryptCheck = 0
-        
         initCheck()
-        beginTimer = time.time()
 
-        print("thread!")
+        beginTimer = time.time()
+        flag = 0
+
         while(not self.breakPoint):
-            loadingEncryptCheck, loadingDecryptCheck = run(beginTimer, self.nickname,loadingEncryptCheck,loadingDecryptCheck)
-        # 쓰레드로 동작시킬 함수 내용 구현
+            beginTimer, flag = run(beginTimer, flag, self.nickname)
+        
 
     def stop(self):
         self.breakPoint = True
         self.quit()
         self.wait(3000)
 
-# 로그인 gui
 
+class focusThread(QThread):
+    
+    def __init__(self):
+        super().__init__()
+        self.breakPoint = False
+    
+    def run(self):
+        size = pyautogui.size()
+        while(not self.breakPoint):
+            try:
+                pyautogui.moveTo(size[0]/2, size[1]/2)
+                if keyboard.is_pressed('win'):
+                    print("win")
+                    time.sleep(0.3)
+                    pyautogui.press('winleft')
+
+            except:
+                pass
+    def stop(self):
+        self.breakPoint = True
+        self.quit()
+        self.wait(3000)
+
+
+class encryptLoadingThread(QThread):
+    def __init__(self):
+        super().__init__()
+        self.encryptLoad = EncryptLoadingClass()
+
+    def run(self):
+        self.encryptLoad.exec()
+
+    def stop(self):
+        self.quit()
+        self.encryptLoad.doneLoading()
+        self.wait(3000)
+
+
+class decryptLoadingThread(QThread):
+    def __init__(self):
+        super().__init__()
+        self.decryptLoad = DecryptLoadingClass()
+
+    def run(self):
+        self.decryptLoad.exec()
+
+    def stop(self):
+        self.quit()
+        self.decryptLoad.doneLoading()
+        self.wait(3000)
+
+
+        
+encryptLoading_form_class = uic.loadUiType("encryptLoadingGUI.ui")[0]
+decryptLoading_form_class = uic.loadUiType("decryptLoadingGUI.ui")[0]
+
+
+
+class EncryptLoadingClass(QDialog, encryptLoading_form_class):
+    def __init__(self, parent=None):
+        super().__init__()
+        self.setupUi(self)
+        self.setWindowIcon(QIcon("windowIcon.png"))
+
+        self.encryptLoadingGIF:QLabel
+
+
+        # 동적 이미지 추가
+        self.loadingmovie = QMovie('loading.gif', QByteArray(), self)
+        #print(self.movie.size())
+        self.loadingmovie.setCacheMode(QMovie.CacheAll)
+        # QLabel에 동적 이미지 삽입
+        self.encryptLoadingGIF.setMovie(self.loadingmovie)
+        self.loadingmovie.start()
+        self.show()
+        self.focusThread = focusThread()
+        self.focusThread.start()
+
+    def doneLoading(self):
+        self.focusThread.stop()
+        self.close()
+
+
+class DecryptLoadingClass(QDialog, decryptLoading_form_class):
+    def __init__(self, parent=None):
+        super().__init__()
+        self.setupUi(self)
+        self.setWindowIcon(QIcon("windowIcon.png"))
+
+        self.decryptLoadingGIF:QLabel
+
+
+        # 동적 이미지 추가
+        self.loadingmovie = QMovie('loading.gif', QByteArray(), self)
+        #print(self.movie.size())
+        self.loadingmovie.setCacheMode(QMovie.CacheAll)
+        # QLabel에 동적 이미지 삽입
+        self.decryptLoadingGIF.setMovie(self.loadingmovie)
+        self.loadingmovie.start()
+        self.show()
+        self.focusThread = focusThread()
+        self.focusThread.start()
+
+    def doneLoading(self):
+        self.focusThread.stop()
+        self.close()
+
+
+
+
+# 로그인 gui
 
 class LoginClass(QDialog, login_form_class):
 
@@ -61,6 +173,8 @@ class LoginClass(QDialog, login_form_class):
         self.loginBtn: QPushButton
         self.joinBtn: QPushButton
         self.findBtn: QPushButton
+
+        self.setWindowFlags(Qt.WindowTitleHint | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
 
         self.loginBtn.clicked.connect(self.btnLoginFunc)
         self.joinBtn.clicked.connect(self.btnJoinFunc)
@@ -131,6 +245,8 @@ class RunClass(QDialog, run_form_class):
 
         self.titleLabel.setAlignment(Qt.AlignCenter)
 
+        self.setWindowFlags(Qt.WindowTitleHint | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
+
         self.setDBBtn.clicked.connect(self.setDB)
         self.logoutBtn.clicked.connect(self.logout)
     
@@ -140,7 +256,6 @@ class RunClass(QDialog, run_form_class):
 
     def setThread(self):
         # start 메소드 호출 -> 자동으로 run 메소드 호출
-        self.hide()
         self.daemonThread = Thread(self.nickname)
         self.daemonThread.start()
 
@@ -163,13 +278,17 @@ class JoinClass(QDialog, join_form_class):
         self.pwdCheckEdit: QLineEdit
         self.nicknameEdit: QLineEdit
         self.joinBtn: QPushButton
+        self.gotoMainBtn: QPushButton
 
         self.idEdit.setText("")
         self.pwdEdit.setText("")
         self.pwdCheckEdit.setText("")
         self.nicknameEdit.setText("")
 
+        self.setWindowFlags(Qt.WindowTitleHint | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
+
         self.joinBtn.clicked.connect(self.join)
+        self.gotoMainBtn.clicked.connect(self.gotoMain)
 
     def checkIDPWValid(self, edit):
         if re.search('^(?!.*\s)(?!.*[\{\}\[\]\/?.,;:|\)*~`!^\-_+<>@\#$%&\\\=\(\'\"])(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,16}$', edit) is None:
@@ -216,6 +335,9 @@ class JoinClass(QDialog, join_form_class):
 
             self.close()
 
+    def gotoMain(self):
+        self.close()
+
 
 # 회원정보 찾기 gui
 class FindClass(QDialog, find_form_class):
@@ -229,9 +351,13 @@ class FindClass(QDialog, find_form_class):
 
         self.findIDBtn: QPushButton
         self.findPWBtn: QPushButton
+        self.gotoMainBtn: QPushButton
+
+        self.setWindowFlags(Qt.WindowTitleHint | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
 
         self.findIDBtn.clicked.connect(self.findIDFunc)
         self.findPWBtn.clicked.connect(self.findPWFunc)
+        self.gotoMainBtn.clicked.connect(self.gotoMain)
 
     def findIDFunc(self):
         QMessageBox.setStyleSheet(
@@ -267,6 +393,9 @@ class FindClass(QDialog, find_form_class):
                 QMessageBox.information(
                 self, 'Message', "해당 ID와 닉네임으로 연결된 PW는 없습니다.", QMessageBox.Yes)
             self.close()
+
+    def gotoMain(self):
+        self.close()
 
 
 app = QApplication(sys.argv)
