@@ -51,7 +51,7 @@ def run(beginTimer, flag, nickname, isChecked_encrypted):
     elif (check == 0):
         afterTimer = time.time()
 
-        if((int)(afterTimer - beginTimer) >= 1):   # 타이머 설정
+        if((int)(afterTimer - beginTimer) >= 0):   # 타이머 설정
             if(isChecked_encrypted == False):
                 encryptthread = encryptLoadingThread()
                 encryptthread.start()

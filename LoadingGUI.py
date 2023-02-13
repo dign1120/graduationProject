@@ -4,7 +4,7 @@ import time
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
-from PyQt5 import uic
+from PyQt5 import uic,QtCore
 from PyQt5.QtCore import *
 
 encryptLoading_form_class = uic.loadUiType("encryptLoadingGUI.ui")[0]
@@ -75,7 +75,10 @@ class EncryptLoadingClass(QDialog, encryptLoading_form_class):
 
         self.encryptLoadingGIF:QLabel
 
-
+        self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+        self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
+        size = pyautogui.size()
+        self.move(size[0]/2, 0)
         # 동적 이미지 추가
         self.loadingmovie = QMovie('loading.gif', QByteArray(), self)
         #print(self.movie.size())
@@ -83,7 +86,6 @@ class EncryptLoadingClass(QDialog, encryptLoading_form_class):
         # QLabel에 동적 이미지 삽입
         self.encryptLoadingGIF.setMovie(self.loadingmovie)
         self.loadingmovie.start()
-        self.show()
         #self.focusThread = focusThread()
         #self.focusThread.start()
 
@@ -100,7 +102,10 @@ class DecryptLoadingClass(QDialog, decryptLoading_form_class):
 
         self.decryptLoadingGIF:QLabel
 
-
+        self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+        self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
+        size = pyautogui.size()
+        self.move(size[0]/2, 0)
         # 동적 이미지 추가
         self.loadingmovie = QMovie('loading.gif', QByteArray(), self)
         #print(self.movie.size())
@@ -108,7 +113,6 @@ class DecryptLoadingClass(QDialog, decryptLoading_form_class):
         # QLabel에 동적 이미지 삽입
         self.decryptLoadingGIF.setMovie(self.loadingmovie)
         self.loadingmovie.start()
-        self.show()
         #self.focusThread = focusThread()
         #self.focusThread.start()
 
