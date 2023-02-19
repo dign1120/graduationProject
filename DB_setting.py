@@ -1,7 +1,7 @@
 import pymysql
 
 def basicProcess(sql, flag):
-    db = pymysql.connect(host='13.125.237.178', port=55235, user='user', passwd='passwd', db='membership', charset='utf8')
+    db = pymysql.connect(host='54.180.101.36', port=58659, user='user', passwd='passwd', db='membership', charset='utf8')
 
     cursor = db.cursor()
 
@@ -61,6 +61,12 @@ def setMembership(id, password, nickname):
 
     basicProcess(sql, 0)
 
+    sql = """
+        INSERT INTO custom_setting (nickname, bookmark, history, download, metadata, cookie, cache, session) VALUES('{}','1','1','1','1','1','1','1');
+        """.format(nickname)
+
+    basicProcess(sql, 0)
+
 def getID(nickname):
     sql = """
         SELECT id FROM account WHERE nickname='{}';
@@ -84,3 +90,21 @@ def getPW(id, nickname):
         return True, data[0][0]
     else:
         return False, None
+
+def setCustomSetting(visitCheck, downloadCheck, bookmarkCheck, autoFormCheck, cookieCheck, cacheCheck, sessionCheck, nickname):
+    sql="""
+    UPDATE custom_setting 
+    SET bookmark='{}', history='{}', download='{}', metadata='{}', cookie='{}', cache='{}', session='{}'
+    WHERE nickname='{}'
+    """.format(visitCheck, downloadCheck, bookmarkCheck, autoFormCheck, cookieCheck, cacheCheck, sessionCheck, nickname)
+
+    data = basicProcess(sql, 0)
+
+def getCustomSetting(nickname):
+    sql="""
+    SELECT bookmark, history, download, metadata, cookie, cache, session FROM custom_setting  WHERE nickname='{}';
+    """.format(nickname)
+
+    data = basicProcess(sql, 1)
+
+    return data[0]

@@ -5,15 +5,15 @@ import time
 import webbrowser
 
 from RunData import checkDir, makeDir, getSrcPath, getDstPath, getControlDataNames
-from CustomCrypto import encrypt_all_files, decrypt_all_files
-from LoadingGUI import *
+from LoadingGUI import EncryptLoadingClass, DecryptLoadingClass
+
 
 def initCheck():
     if not(checkDir()):
         makeDir()
 
 
-def run(beginTimer, flag, nickname, isChecked_encrypted):
+def run(beginTimer, flag, nickname):
     check = 0
     srcPath = getSrcPath()
     dstPath = getDstPath()
@@ -26,49 +26,46 @@ def run(beginTimer, flag, nickname, isChecked_encrypted):
 
     if(check == 1 and flag == 0):
         # 파일 옮기기
-        fileMove(dstPath, srcPath)
+        fileMove(dstPath, srcPath, nickname)
 
         beginTimer = time.time()
 
-        return beginTimer, 0 , isChecked_encrypted
+        return beginTimer, 0
     elif(check == 1 and flag == 1):
-        
         os.system('taskkill /f /im chrome.exe')
-        decryptthread = decryptLoadingThread()
-        decryptthread.start()
-        # 파일 복호화 
-        decrypt_all_files(dstPath, nickname)
-        
+
+        decryptclass = DecryptLoadingClass(dstPath, nickname)
+        decryptclass.exec()
+        print("decrypt done!")
+
         # 파일 옮기기
-        fileMove(dstPath, srcPath)
-        decryptthread.stop()
-        isChecked_encrypted  = False
+        fileMove(dstPath, srcPath, nickname)
 
         webbrowser.open("https://google.com")
         beginTimer = time.time()
 
-        return beginTimer, 0, isChecked_encrypted
-    elif (check == 0):
+        return beginTimer, 0
+    elif (check == 0 and flag == 0):
+        # 파일 옮기기
+        fileMove(srcPath, dstPath, nickname)
+
         afterTimer = time.time()
 
-        if((int)(afterTimer - beginTimer) >= 0):   # 타이머 설정
-            if(isChecked_encrypted == False):
-                encryptthread = encryptLoadingThread()
-                encryptthread.start()
-                 # 파일 옮기기
-                fileMove(srcPath, dstPath)
-                # 파일 암호화
-                encrypt_all_files(dstPath, nickname)
-                encryptthread.stop()
-                isChecked_encrypted = True
+        if((int)(afterTimer - beginTimer) >= 1):   # 타이머 설정
+            encryptclass = EncryptLoadingClass(dstPath, nickname)
 
-            return beginTimer, 1, isChecked_encrypted
+            encryptclass.exec()
+            print("encrypt done!")
+
+            return beginTimer, 1
         else:
-            return beginTimer, 0 , isChecked_encrypted
+            return beginTimer, 0
+    elif (check==0 and flag == 1):
+        return beginTimer, 1
 
 
-def fileMove(srcPath, dstPath):
-    filenames = getControlDataNames()
+def fileMove(srcPath, dstPath, nickname):
+    filenames = getControlDataNames(nickname)
 
     for filename in filenames:
         if(os.path.isfile(srcPath + filename)):

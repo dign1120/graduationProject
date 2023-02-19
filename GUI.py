@@ -1,10 +1,6 @@
 import sys
 import time
 import re
-import keyboard
-import pyautogui
-
-
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -12,7 +8,7 @@ from PyQt5 import uic
 from PyQt5.QtCore import *
 
 from Run import initCheck, run
-from DB_setting import getLoginData, checkIDUnique, checkNicknameUnique, setMembership, getID, getPW
+from DB_setting import getLoginData, checkIDUnique, checkNicknameUnique, setMembership, getID, getPW, setCustomSetting, getCustomSetting
 
 login_form_class = uic.loadUiType("loginGUI.ui")[0]
 run_form_class = uic.loadUiType("runGUI.ui")[0]
@@ -20,7 +16,7 @@ join_form_class = uic.loadUiType("joinGUI.ui")[0]
 find_form_class = uic.loadUiType("findGUI.ui")[0]
 
 
-class Thread(QThread):
+class runThread(QThread):
 
     # 초기화 메서드 구현
     def __init__(self, nickname):
@@ -34,10 +30,9 @@ class Thread(QThread):
 
         beginTimer = time.time()
         flag = 0
-        isChecked_encrypted = False
 
         while(not self.breakPoint):
-            beginTimer, flag, isChecked_encrypted  = run(beginTimer, flag, self.nickname, isChecked_encrypted)
+            beginTimer, flag = run(beginTimer, flag, self.nickname)
         
 
     def stop(self):
@@ -46,6 +41,7 @@ class Thread(QThread):
         self.wait(3000)
 
 # 로그인 gui
+
 
 class LoginClass(QDialog, login_form_class):
 
@@ -121,9 +117,9 @@ class RunClass(QDialog, run_form_class):
 
         self.setupUi(self)
         self.titleLabel: QLabel
+        self.bookmarkCheckBox:QCheckBox
         self.visitCheckBox:QCheckBox
         self.downloadCheckBox:QCheckBox
-        self.bookmarkCheckBox:QCheckBox
         self.autoFormCheckBox:QCheckBox
         self.cookieCheckBox:QCheckBox
         self.cacheCheckBox:QCheckBox
@@ -144,17 +140,41 @@ class RunClass(QDialog, run_form_class):
         self.nickname = nickname
         self.titleLabel.setText(nickname + " 님")
 
+        checkRetval = getCustomSetting(self.nickname)
+
+        if checkRetval[0] == 0:
+            self.bookmarkCheckBox.toggle()
+        if checkRetval[1] == 0:
+            self.visitCheckBox.toggle()
+        if checkRetval[2] == 0:
+            self.downloadCheckBox.toggle()
+        if checkRetval[3] == 0:
+            self.autoFormCheckBox.toggle()
+        if checkRetval[4] == 0:
+            self.cookieCheckBox.toggle()
+        if checkRetval[5] == 0:
+            self.cacheCheckBox.toggle()
+        if checkRetval[6] == 0:
+            self.sessionCheckBox.toggle()
+
     def setThread(self):
         # start 메소드 호출 -> 자동으로 run 메소드 호출
-        self.daemonThread = Thread(self.nickname)
+        self.daemonThread = runThread(self.nickname)
         self.daemonThread.start()
-        print("hello")
 
     def setDB(self):
-        print("setDB clicked")
+        bookmarkCheck = 1 if self.bookmarkCheckBox.isChecked() is True else 0
+        visitCheck = 1 if self.visitCheckBox.isChecked() is True else 0
+        downloadCheck = 1 if self.downloadCheckBox.isChecked() is True else 0
+        autoFormCheck = 1 if self.autoFormCheckBox.isChecked() is True else 0
+        cookieCheck = 1 if self.cookieCheckBox.isChecked() is True else 0
+        cacheCheck = 1 if self.cacheCheckBox.isChecked() is True else 0
+        sessionCheck = 1 if self.sessionCheckBox.isChecked() is True else 0
+
+        setCustomSetting(bookmarkCheck, visitCheck, downloadCheck, autoFormCheck, cookieCheck, cacheCheck, sessionCheck, self.nickname)
 
     def logout(self):
-        self.daemonThread.stop()
+        self.daemonThread.terminate()
         self.close()
 
 

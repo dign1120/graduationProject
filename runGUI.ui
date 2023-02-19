@@ -13,9 +13,6 @@
   <property name="windowTitle">
    <string>PIM AGENT</string>
   </property>
-  <property name="styleSheet">
-   <string notr="true">background-color:qlineargradient(spread:pad, x1:0.5, y1:0.432, x2:0.499682, y2:0.551, stop:0 rgba(215, 215, 215, 255), stop:1 rgba(239, 239, 237, 255))</string>
-  </property>
   <widget class="QFrame" name="frame">
    <property name="geometry">
     <rect>
@@ -622,9 +619,9 @@ border-radius:3px;</string>
    <widget class="QLabel" name="userSettingsLabel">
     <property name="geometry">
      <rect>
-      <x>50</x>
+      <x>40</x>
       <y>60</y>
-      <width>171</width>
+      <width>211</width>
       <height>31</height>
      </rect>
     </property>
@@ -641,7 +638,7 @@ border-radius:3px;</string>
 border: 5px solid #EFEFED;</string>
     </property>
     <property name="text">
-     <string>암호화 파일 개인 설정</string>
+     <string>관리  개인정보  파일  설정</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
