@@ -1,7 +1,7 @@
 import os
 import sys
 
-from win32comext.shell import shell
+#from win32comext.shell import shell
 from DB_setting import getCustomSetting
 
 
@@ -10,7 +10,7 @@ def getAllDataNames():
             "/Login Data", "/Login Data For Account", "/Login Data-journal", "/Preferences", "/Shortcuts", 
             "/Shortcuts-journal", "/Top Sites", "/Top Sites-journal", "/Web Data", "/Web Data-journal", 
             "/Local State", "/IndexedDB", "/Storage", "/Sync App Settings", "/Sync Data", "/WebStorage", "/Cookies","/cache", "/Code cache", "DawnCache"
-            ,"/Session Storage", "/Sessions"  ]
+            ,"/Session Storage", "/Sessions"]
     return datas
     
 

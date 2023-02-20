@@ -22,8 +22,8 @@ def runWithoutLogin(block):
 
         if ps_name == "chrome.exe":
             check = 1
-    print(check)
-    if check == 0 and block == False :
+            
+    if check == 0 and block == False:
         filenames = getAllDataNames()
         for filename in filenames:
             if os.path.isfile(srcPath + filename):
@@ -62,7 +62,6 @@ def runWithLogin(beginTimer, flag, nickname):
 
         decryptclass = DecryptLoadingClass(dstPath, nickname)
         decryptclass.exec()
-        print("decrypt done!")
 
         # 파일 옮기기
         fileMove(dstPath, srcPath, nickname)
@@ -79,9 +78,7 @@ def runWithLogin(beginTimer, flag, nickname):
 
         if((int)(afterTimer - beginTimer) >= 1):   # 타이머 설정
             encryptclass = EncryptLoadingClass(dstPath, nickname)
-
             encryptclass.exec()
-            print("encrypt done!")
 
             return beginTimer, 1
         else:

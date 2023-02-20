@@ -64,10 +64,13 @@ class initRunThread(QThread):
 
 class LoginClass(QDialog, login_form_class):
 
-    def __init__(self):
+    def __init__(self, app):
         super().__init__()
         self.setupUi(self)
         self.setWindowIcon(QIcon("windowIcon.png"))
+        self.app = app
+        self.trayIcon = QSystemTrayIcon(QIcon("windowIcon.png"), parent = self.app)
+
 
         self.id = ""
         self.password = ""
@@ -78,12 +81,20 @@ class LoginClass(QDialog, login_form_class):
         self.loginBtn: QPushButton
         self.joinBtn: QPushButton
         self.findBtn: QPushButton
+        self.runBackgroundBtn:QPushButton
+        self.minimizeBtn:QPushButton
 
-        self.setWindowFlags(Qt.WindowTitleHint | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
+        self.setWindowFlags(Qt.FramelessWindowHint)
+
+
+        self.runBackgroundBtn.setIcon(QIcon("closeIcon.png"))
+        self.minimizeBtn.setIcon(QIcon("minimizeIcon.png"))
 
         self.loginBtn.clicked.connect(self.btnLoginFunc)
         self.joinBtn.clicked.connect(self.btnJoinFunc)
         self.findBtn.clicked.connect(self.btnFindFunc)
+        self.minimizeBtn.clicked.connect(self.minimize)
+        self.runBackgroundBtn.clicked.connect(self.backgroundEvent)
 
         self.initTh = initRunThread()
         self.initTh.start()
@@ -119,14 +130,38 @@ class LoginClass(QDialog, login_form_class):
                 self, 'Message', "입력하신 회원 정보와 일치하는 계정이 없습니다.", QMessageBox.Yes)
             return
 
+    def minimize(self):
+        self.showMinimized()
+
+    def backgroundEvent(self):
+        self.hide()
+        self.trayIcon.setToolTip("PIM AGENT")
+        self.trayIcon.show()
+
+        menu = QMenu()
+        showAction = menu.addAction('Show')
+        showAction.triggered.connect(self.showWindow)
+        exitAction = menu.addAction('Exit')
+        exitAction.triggered.connect(self.app.quit)
+        
+
+        self.trayIcon.setContextMenu(menu)
+
+
+    def showWindow(self):
+        self.show()
+        self.trayIcon.hide()
+
     def btnJoinFunc(self):
         self.hide()
+        self.initTh.stop()
         joinWindow = JoinClass(self)
         joinWindow.exec()
         self.show()
 
     def btnFindFunc(self):
         self.hide()
+        self.initTh.stop()
         findWindow = FindClass(self)
         findWindow.exec()
         self.show()
@@ -149,15 +184,19 @@ class RunClass(QDialog, run_form_class):
         self.sessionCheckBox:QCheckBox
         self.setDBBtn:QPushButton
         self.logoutBtn: QPushButton
+        
 
         self.setWindowIcon(QIcon("windowIcon.png"))
 
         self.titleLabel.setAlignment(Qt.AlignCenter)
 
-        self.setWindowFlags(Qt.WindowTitleHint | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint | Qt.WindowStaysOnBottomHint)
+        self.setWindowFlags(Qt.FramelessWindowHint)
 
         self.setDBBtn.clicked.connect(self.setDB)
         self.logoutBtn.clicked.connect(self.logout)
+        
+
+
     
     def setNickname(self, nickname):
         self.nickname = nickname
@@ -195,6 +234,7 @@ class RunClass(QDialog, run_form_class):
         sessionCheck = 1 if self.sessionCheckBox.isChecked() is True else 0
 
         setCustomSetting(bookmarkCheck, visitCheck, downloadCheck, autoFormCheck, cookieCheck, cacheCheck, sessionCheck, self.nickname)
+
 
     def logout(self):
         self.daemonThread.terminate()
@@ -333,6 +373,6 @@ class FindClass(QDialog, find_form_class):
 
 
 app = QApplication(sys.argv)
-loginWindow = LoginClass()
+loginWindow = LoginClass(app)
 loginWindow.show()
 app.exec_()
