@@ -7,7 +7,7 @@ from PyQt5.QtGui import *
 from PyQt5 import uic
 from PyQt5.QtCore import *
 
-from Run import initCheck, run
+from Run import initCheck, runWithLogin, runWithoutLogin
 from DB_setting import getLoginData, checkIDUnique, checkNicknameUnique, setMembership, getID, getPW, setCustomSetting, getCustomSetting
 
 login_form_class = uic.loadUiType("loginGUI.ui")[0]
@@ -26,14 +26,33 @@ class runThread(QThread):
 
     # 쓰레드로 동작시킬 함수 내용 구현
     def run(self):
-        initCheck()
+        initCheck(self.nickname)
 
         beginTimer = time.time()
         flag = 0
 
         while(not self.breakPoint):
-            beginTimer, flag = run(beginTimer, flag, self.nickname)
+            beginTimer, flag = runWithLogin(beginTimer, flag, self.nickname)
         
+
+    def stop(self):
+        self.breakPoint = True
+        self.quit()
+        self.wait(3000)
+
+
+class initRunThread(QThread):
+    def __init__(self):
+        super().__init__()
+        self.breakPoint = False
+
+        
+
+    def run(self):
+        block = False
+        
+        while(not self.breakPoint):
+            block = runWithoutLogin(block)
 
     def stop(self):
         self.breakPoint = True
@@ -66,6 +85,9 @@ class LoginClass(QDialog, login_form_class):
         self.joinBtn.clicked.connect(self.btnJoinFunc)
         self.findBtn.clicked.connect(self.btnFindFunc)
 
+        self.initTh = initRunThread()
+        self.initTh.start()
+
     def btnLoginFunc(self):
         self.id = self.idEdit.text()
         self.password = self.pwdEdit.text()
@@ -79,6 +101,7 @@ class LoginClass(QDialog, login_form_class):
 
         checkLogin, self.nickname = getLoginData(self.id, self.password)
         if(checkLogin):
+            self.initTh.stop()
             self.hide()
 
             mainWindow = RunClass(self)
@@ -131,7 +154,7 @@ class RunClass(QDialog, run_form_class):
 
         self.titleLabel.setAlignment(Qt.AlignCenter)
 
-        self.setWindowFlags(Qt.WindowTitleHint | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
+        self.setWindowFlags(Qt.WindowTitleHint | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint | Qt.WindowStaysOnBottomHint)
 
         self.setDBBtn.clicked.connect(self.setDB)
         self.logoutBtn.clicked.connect(self.logout)

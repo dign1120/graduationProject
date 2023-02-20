@@ -4,19 +4,45 @@ import psutil
 import time
 import webbrowser
 
-from RunData import checkDir, makeDir, getSrcPath, getDstPath, getControlDataNames
+from RunData import checkDir, makeDir, getSrcPath, getDstPath, getControlDataNames, getAllDataNames
 from LoadingGUI import EncryptLoadingClass, DecryptLoadingClass
 
 
-def initCheck():
-    if not(checkDir()):
-        makeDir()
+def initCheck(nickname):
+    if not(checkDir(nickname)):
+        makeDir(nickname)
 
 
-def run(beginTimer, flag, nickname):
+def runWithoutLogin(block):
     check = 0
     srcPath = getSrcPath()
-    dstPath = getDstPath()
+    
+    for proc in psutil.process_iter():    # 실행중인 프로세스를 순차적으로 검색
+        ps_name = proc.name()               # 프로세스 이름을 ps_name에 할당
+
+        if ps_name == "chrome.exe":
+            check = 1
+    print(check)
+    if check == 0 and block == False :
+        filenames = getAllDataNames()
+        for filename in filenames:
+            if os.path.isfile(srcPath + filename):
+                    os.remove(srcPath + filename)
+            elif os.path.isdir(srcPath + filename):
+                shutil.rmtree(srcPath + filename)
+            block = True
+        return block
+    elif check == 1:
+        block = False
+        return block
+
+
+
+
+def runWithLogin(beginTimer, flag, nickname):
+    check = 0
+    srcPath = getSrcPath()
+    dstPath = getDstPath(nickname)
 
     for proc in psutil.process_iter():    # 실행중인 프로세스를 순차적으로 검색
         ps_name = proc.name()               # 프로세스 이름을 ps_name에 할당

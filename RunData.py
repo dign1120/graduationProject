@@ -5,6 +5,18 @@ from win32comext.shell import shell
 from DB_setting import getCustomSetting
 
 
+def getAllDataNames():
+    datas = ["/Bookmarks", "/Bookmarks.bak","/History", "/History-journal", "/Visited Links", "/DownloadMetadata", 
+            "/Login Data", "/Login Data For Account", "/Login Data-journal", "/Preferences", "/Shortcuts", 
+            "/Shortcuts-journal", "/Top Sites", "/Top Sites-journal", "/Web Data", "/Web Data-journal", 
+            "/Local State", "/IndexedDB", "/Storage", "/Sync App Settings", "/Sync Data", "/WebStorage", "/Cookies","/cache", "/Code cache", "DawnCache"
+            ,"/Session Storage", "/Sessions"  ]
+    return datas
+    
+
+
+
+
 def getControlDataNames(nickname):
     checkRetval = getCustomSetting(nickname)
     controlDataNames = []
@@ -40,19 +52,19 @@ def getSrcPath():
 
     return homePath
 
-def getDstPath():
-    dstPath = "C:/Users/Public/PIM_AGENT"
+def getDstPath(nickname):
+    dstPath = "C:/Users/Public/PIM_AGENT/" + nickname
 
     return dstPath
 
-def checkDir():
-    dirPath = "C:/Users/Public/PIM_AGENT"
+def checkDir(nickname):
+    dirPath = "C:/Users/Public/PIM_AGENT/" + nickname
 
     if(os.path.isdir(dirPath)):
         return True
     else:
         return False
 
-def makeDir():
-    dirPath = "C:/Users/Public/PIM_AGENT"
+def makeDir(nickname):
+    dirPath = "C:/Users/Public/PIM_AGENT/" + nickname
     os.mkdir(dirPath)

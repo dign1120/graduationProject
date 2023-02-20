@@ -66,6 +66,7 @@ class decryptThread(QThread):
 
 
 class EncryptLoadingClass(QDialog, encryptLoading_form_class):
+    
     def __init__(self, dstPath, nickname):
         super().__init__()
         self.setupUi(self)
@@ -95,7 +96,6 @@ class EncryptLoadingClass(QDialog, encryptLoading_form_class):
 
     def doneLoading(self,retval):
         if retval == True:
-            self.encryptTh.terminate()
             self.focusTh.terminate()
             self.close()
 
@@ -131,6 +131,5 @@ class DecryptLoadingClass(QDialog, decryptLoading_form_class):
 
     def doneLoading(self,retval):
         if retval == True:
-            self.decryptTh.terminate()
             self.focusTh.terminate()
             self.close()
