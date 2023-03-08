@@ -50,6 +50,7 @@ class preGuestThread(QThread):
         self.srcPath = srcPath
 
     def run(self):
+        guestFileRemove(self.srcPath, 0)
         guestFileRemove(self.srcPath, 1)
         self.preGuest_signal.emit()
 
