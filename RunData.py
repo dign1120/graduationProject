@@ -1,24 +1,13 @@
 import os
-import sys
+import shutil
 
-#from win32comext.shell import shell
 from DB_setting import getCustomSetting
 
-
-def getAllDataNames():
-    datas = ["/Bookmarks", "/Bookmarks.bak","/History", "/History-journal", "/Visited Links", "/DownloadMetadata", 
-            "/Login Data", "/Login Data For Account", "/Login Data-journal", "/Preferences", "/Shortcuts", 
-            "/Shortcuts-journal", "/Top Sites", "/Top Sites-journal", "/Web Data", "/Web Data-journal", 
-            "/Local State", "/IndexedDB", "/Storage", "/Sync App Settings", "/Sync Data", "/WebStorage", "/Cookies","/cache", "/Code cache", "DawnCache"
-            ,"/Session Storage", "/Sessions"]
-    return datas
-    
-
-
-
-
 def getControlDataNames(nickname):
-    checkRetval = getCustomSetting(nickname)
+    if(nickname == None):
+        checkRetval = [1,1,1,1,1,1,1]
+    else:
+        checkRetval = getCustomSetting(nickname)
     controlDataNames = []
 
     if checkRetval[0] == 1:
@@ -35,7 +24,10 @@ def getControlDataNames(nickname):
     return controlDataNames
 
 def getRemoveDataNames(nickname):
-    checkRetval = getCustomSetting(nickname)
+    if(nickname == None):
+        checkRetval = [1,1,1,1,1,1,1]
+    else:
+        checkRetval = getCustomSetting(nickname)
     removeDataNames = []
 
     if checkRetval[4] == 1:
@@ -53,18 +45,55 @@ def getSrcPath():
     return homePath
 
 def getDstPath(nickname):
-    dstPath = "C:/Users/Public/PIM_AGENT/" + nickname
+    dstPath = os.path.expanduser('~/AppData/Local/PIM_AGENT/').replace('\\', '/') + nickname
 
     return dstPath
 
-def checkDir(nickname):
-    dirPath = "C:/Users/Public/PIM_AGENT/" + nickname
+def initCheck():
+    dirPath = os.path.expanduser('~/AppData/Local/PIM_AGENT').replace('\\', '/')
 
-    if(os.path.isdir(dirPath)):
-        return True
+    if(not os.path.isdir(dirPath)):
+        os.mkdir(dirPath)
+
+def initLocalCheck(nickname):
+    dirPath = os.path.expanduser('~/AppData/Local/PIM_AGENT/').replace('\\', '/') + nickname
+
+    if(not os.path.isdir(dirPath)):
+        os.mkdir(dirPath)
+
+def memberFileMove(srcPath, dstPath, nickname):
+    filenames = getControlDataNames(nickname)
+
+    for filename in filenames:
+        if(os.path.isfile(srcPath + filename)):
+            if(os.path.exists(dstPath + filename)):
+                os.remove(dstPath + filename)
+            shutil.move(srcPath + filename, dstPath + filename)
+
+        elif(os.path.isdir(srcPath + filename)):
+            if(os.path.exists(dstPath + filename)):
+                shutil.rmtree(dstPath + filename)
+            shutil.move(srcPath + filename, dstPath + filename)
+
+def memberFileRemove(srcPath, nickname):
+    filenames = getRemoveDataNames(nickname)
+
+    for filename in filenames:
+        if(os.path.isfile(srcPath + filename)):
+            os.remove(srcPath + filename)
+
+        elif(os.path.isdir(srcPath + filename)):
+            shutil.rmtree(srcPath + filename)
+
+def guestFileRemove(srcPath, flag):
+    if(flag == 0):
+        filenames = getControlDataNames(None)
     else:
-        return False
+        filenames = getRemoveDataNames(None)
 
-def makeDir(nickname):
-    dirPath = "C:/Users/Public/PIM_AGENT/" + nickname
-    os.mkdir(dirPath)
+    for filename in filenames:
+        if(os.path.isfile(srcPath + filename)):
+            os.remove(srcPath + filename)
+
+        elif(os.path.isdir(srcPath + filename)):
+            shutil.rmtree(srcPath + filename)

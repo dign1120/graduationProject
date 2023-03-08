@@ -7,16 +7,38 @@ from PyQt5.QtGui import *
 from PyQt5 import uic
 from PyQt5.QtCore import *
 
-from Run import initCheck, runWithLogin, runWithoutLogin
+from Run import runMem, runGuest
+from RunData import initCheck
 from DB_setting import getLoginData, checkIDUnique, checkNicknameUnique, setMembership, getID, getPW, setCustomSetting, getCustomSetting
+from LoadingGUI import preMemClass
 
-login_form_class = uic.loadUiType("loginGUI.ui")[0]
-run_form_class = uic.loadUiType("runGUI.ui")[0]
-join_form_class = uic.loadUiType("joinGUI.ui")[0]
-find_form_class = uic.loadUiType("findGUI.ui")[0]
+login_form_class = uic.loadUiType("UI/loginGUI.ui")[0]
+run_form_class = uic.loadUiType("UI/runGUI.ui")[0]
+join_form_class = uic.loadUiType("UI/joinGUI.ui")[0]
+find_form_class = uic.loadUiType("UI/findGUI.ui")[0]
+
+class runGuestThread(QThread):
+
+    # 초기화 메서드 구현
+    def __init__(self):
+        super().__init__()
+        self.breakPoint = False
+        self.flag = False
+
+    # 쓰레드로 동작시킬 함수 내용 구현
+    def run(self):
+        beginTimer = time.time()
+
+        while(not self.breakPoint):
+            beginTimer, self.flag = runGuest(beginTimer, self.flag)
+
+    def stop(self):
+        self.breakPoint = True
+        self.quit()
+        self.wait(3000)
 
 
-class runThread(QThread):
+class runMemThread(QThread):
 
     # 초기화 메서드 구현
     def __init__(self, nickname):
@@ -26,33 +48,13 @@ class runThread(QThread):
 
     # 쓰레드로 동작시킬 함수 내용 구현
     def run(self):
-        initCheck(self.nickname)
 
         beginTimer = time.time()
         flag = 0
 
         while(not self.breakPoint):
-            beginTimer, flag = runWithLogin(beginTimer, flag, self.nickname)
+            beginTimer, flag = runMem(beginTimer, flag, self.nickname)
         
-
-    def stop(self):
-        self.breakPoint = True
-        self.quit()
-        self.wait(3000)
-
-
-class initRunThread(QThread):
-    def __init__(self):
-        super().__init__()
-        self.breakPoint = False
-
-        
-
-    def run(self):
-        block = False
-        
-        while(not self.breakPoint):
-            block = runWithoutLogin(block)
 
     def stop(self):
         self.breakPoint = True
@@ -64,13 +66,10 @@ class initRunThread(QThread):
 
 class LoginClass(QDialog, login_form_class):
 
-    def __init__(self, app):
+    def __init__(self):
         super().__init__()
         self.setupUi(self)
-        self.setWindowIcon(QIcon("windowIcon.png"))
-        self.app = app
-        self.trayIcon = QSystemTrayIcon(QIcon("windowIcon.png"), parent = self.app)
-
+        self.setWindowIcon(QIcon("Image/windowIcon.png"))
 
         self.id = ""
         self.password = ""
@@ -81,23 +80,17 @@ class LoginClass(QDialog, login_form_class):
         self.loginBtn: QPushButton
         self.joinBtn: QPushButton
         self.findBtn: QPushButton
-        self.runBackgroundBtn:QPushButton
-        self.minimizeBtn:QPushButton
 
-        self.setWindowFlags(Qt.FramelessWindowHint)
+        self.setWindowFlags(Qt.WindowTitleHint | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
 
-
-        self.runBackgroundBtn.setIcon(QIcon("closeIcon.png"))
-        self.minimizeBtn.setIcon(QIcon("minimizeIcon.png"))
+        self.daemonThread = runGuestThread()
+        self.daemonThread.start()
 
         self.loginBtn.clicked.connect(self.btnLoginFunc)
         self.joinBtn.clicked.connect(self.btnJoinFunc)
         self.findBtn.clicked.connect(self.btnFindFunc)
-        self.minimizeBtn.clicked.connect(self.minimize)
-        self.runBackgroundBtn.clicked.connect(self.backgroundEvent)
 
-        self.initTh = initRunThread()
-        self.initTh.start()
+        initCheck()
 
     def btnLoginFunc(self):
         self.id = self.idEdit.text()
@@ -112,13 +105,20 @@ class LoginClass(QDialog, login_form_class):
 
         checkLogin, self.nickname = getLoginData(self.id, self.password)
         if(checkLogin):
-            self.initTh.stop()
             self.hide()
+            self.daemonThread.stop()
+            
+            preMemThread = preMemClass(self.nickname)
+            preMemThread.exec()
 
             mainWindow = RunClass(self)
             mainWindow.setNickname(self.nickname)
             mainWindow.setThread()
+
             mainWindow.exec()
+
+            self.daemonThread = runGuestThread()
+            self.daemonThread.start()
 
             self.idEdit.setText("")
             self.pwdEdit.setText("")
@@ -130,38 +130,14 @@ class LoginClass(QDialog, login_form_class):
                 self, 'Message', "입력하신 회원 정보와 일치하는 계정이 없습니다.", QMessageBox.Yes)
             return
 
-    def minimize(self):
-        self.showMinimized()
-
-    def backgroundEvent(self):
-        self.hide()
-        self.trayIcon.setToolTip("PIM AGENT")
-        self.trayIcon.show()
-
-        menu = QMenu()
-        showAction = menu.addAction('Show')
-        showAction.triggered.connect(self.showWindow)
-        exitAction = menu.addAction('Exit')
-        exitAction.triggered.connect(self.app.quit)
-        
-
-        self.trayIcon.setContextMenu(menu)
-
-
-    def showWindow(self):
-        self.show()
-        self.trayIcon.hide()
-
     def btnJoinFunc(self):
         self.hide()
-        self.initTh.stop()
         joinWindow = JoinClass(self)
         joinWindow.exec()
         self.show()
 
     def btnFindFunc(self):
         self.hide()
-        self.initTh.stop()
         findWindow = FindClass(self)
         findWindow.exec()
         self.show()
@@ -184,19 +160,15 @@ class RunClass(QDialog, run_form_class):
         self.sessionCheckBox:QCheckBox
         self.setDBBtn:QPushButton
         self.logoutBtn: QPushButton
-        
 
-        self.setWindowIcon(QIcon("windowIcon.png"))
+        self.setWindowIcon(QIcon("Image/windowIcon.png"))
 
         self.titleLabel.setAlignment(Qt.AlignCenter)
 
-        self.setWindowFlags(Qt.FramelessWindowHint)
+        self.setWindowFlags(Qt.WindowTitleHint | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
 
         self.setDBBtn.clicked.connect(self.setDB)
         self.logoutBtn.clicked.connect(self.logout)
-        
-
-
     
     def setNickname(self, nickname):
         self.nickname = nickname
@@ -221,7 +193,7 @@ class RunClass(QDialog, run_form_class):
 
     def setThread(self):
         # start 메소드 호출 -> 자동으로 run 메소드 호출
-        self.daemonThread = runThread(self.nickname)
+        self.daemonThread = runMemThread(self.nickname)
         self.daemonThread.start()
 
     def setDB(self):
@@ -235,9 +207,8 @@ class RunClass(QDialog, run_form_class):
 
         setCustomSetting(bookmarkCheck, visitCheck, downloadCheck, autoFormCheck, cookieCheck, cacheCheck, sessionCheck, self.nickname)
 
-
     def logout(self):
-        self.daemonThread.terminate()
+        self.daemonThread.stop()
         self.close()
 
 
@@ -373,6 +344,6 @@ class FindClass(QDialog, find_form_class):
 
 
 app = QApplication(sys.argv)
-loginWindow = LoginClass(app)
+loginWindow = LoginClass()
 loginWindow.show()
 app.exec_()

@@ -54,7 +54,6 @@ def encrypt_all_files(filepath, nickname):
     for file_name in dirs: 
         if file_name[-4:] != ".enc":
             encrypt(file_name, nickname)
-    return True
 
 
 def decrypt_all_files(filepath, nickname):
@@ -62,4 +61,3 @@ def decrypt_all_files(filepath, nickname):
     for file_name in dirs:
         if file_name[-4:] == ".enc":
             decrypt(file_name, nickname)
-    return True

@@ -1,45 +1,44 @@
 import os
-import shutil
 import psutil
 import time
 import webbrowser
 
-from RunData import checkDir, makeDir, getSrcPath, getDstPath, getControlDataNames, getAllDataNames
-from LoadingGUI import EncryptLoadingClass, DecryptLoadingClass
+from RunData import getSrcPath, getDstPath, memberFileMove, guestFileRemove
+from LoadingGUI import DecryptLoadingClass, EncryptLoadingClass, preGuestClass
 
 
-def initCheck(nickname):
-    if not(checkDir(nickname)):
-        makeDir(nickname)
-
-
-def runWithoutLogin(block):
+def runGuest(beginTimer, flag):
     check = 0
     srcPath = getSrcPath()
-    
+
     for proc in psutil.process_iter():    # 실행중인 프로세스를 순차적으로 검색
         ps_name = proc.name()               # 프로세스 이름을 ps_name에 할당
 
         if ps_name == "chrome.exe":
             check = 1
-            
-    if check == 0 and block == False:
-        filenames = getAllDataNames()
-        for filename in filenames:
-            if os.path.isfile(srcPath + filename):
-                    os.remove(srcPath + filename)
-            elif os.path.isdir(srcPath + filename):
-                shutil.rmtree(srcPath + filename)
-            block = True
-        return block
-    elif check == 1:
-        block = False
-        return block
+            break
+
+    if(check == 0 and flag == False):
+        guestFileRemove(srcPath, 0)
+
+        afterTimer = time.time()
+
+        if((int)(afterTimer - beginTimer) >= 10):   # 타이머 설정
+            preGuestThread = preGuestClass(srcPath)
+            preGuestThread.exec()
+
+            return beginTimer, True
+
+        return beginTimer, False
+    elif (check == 0 and flag == True):
+        return beginTimer, flag
+    else:
+        beginTimer = time.time()
+
+        return beginTimer, False
 
 
-
-
-def runWithLogin(beginTimer, flag, nickname):
+def runMem(beginTimer, flag, nickname):
     check = 0
     srcPath = getSrcPath()
     dstPath = getDstPath(nickname)
@@ -49,10 +48,11 @@ def runWithLogin(beginTimer, flag, nickname):
 
         if ps_name == "chrome.exe":
             check = 1
+            break
 
     if(check == 1 and flag == 0):
         # 파일 옮기기
-        fileMove(dstPath, srcPath, nickname)
+        memberFileMove(dstPath, srcPath, nickname)
 
         beginTimer = time.time()
 
@@ -60,11 +60,11 @@ def runWithLogin(beginTimer, flag, nickname):
     elif(check == 1 and flag == 1):
         os.system('taskkill /f /im chrome.exe')
 
-        decryptclass = DecryptLoadingClass(dstPath, nickname)
-        decryptclass.exec()
+        decryptThread = DecryptLoadingClass(dstPath, nickname)
+        decryptThread.exec()
 
         # 파일 옮기기
-        fileMove(dstPath, srcPath, nickname)
+        memberFileMove(dstPath, srcPath, nickname)
 
         webbrowser.open("https://google.com")
         beginTimer = time.time()
@@ -72,13 +72,13 @@ def runWithLogin(beginTimer, flag, nickname):
         return beginTimer, 0
     elif (check == 0 and flag == 0):
         # 파일 옮기기
-        fileMove(srcPath, dstPath, nickname)
+        memberFileMove(srcPath, dstPath, nickname)
 
         afterTimer = time.time()
 
-        if((int)(afterTimer - beginTimer) >= 1):   # 타이머 설정
-            encryptclass = EncryptLoadingClass(dstPath, nickname)
-            encryptclass.exec()
+        if((int)(afterTimer - beginTimer) >= 10):   # 타이머 설정
+            encryptThread = EncryptLoadingClass(srcPath, dstPath, nickname)
+            encryptThread.exec()
 
             return beginTimer, 1
         else:
@@ -86,17 +86,3 @@ def runWithLogin(beginTimer, flag, nickname):
     elif (check==0 and flag == 1):
         return beginTimer, 1
 
-
-def fileMove(srcPath, dstPath, nickname):
-    filenames = getControlDataNames(nickname)
-
-    for filename in filenames:
-        if(os.path.isfile(srcPath + filename)):
-            if(os.path.exists(dstPath + filename)):
-                os.remove(dstPath + filename)
-            shutil.move(srcPath + filename, dstPath + filename)
-
-        elif(os.path.isdir(srcPath + filename)):
-            if(os.path.exists(dstPath + filename)):
-                shutil.rmtree(dstPath + filename)
-            shutil.move(srcPath + filename, dstPath + filename)
