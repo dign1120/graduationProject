@@ -1,7 +1,7 @@
 import pymysql
 
 def basicProcess(sql, flag):
-    db = pymysql.connect(host='3.34.50.194', port=53236, user='user', passwd='passwd', db='membership', charset='utf8')
+    db = pymysql.connect(host='52.78.219.165', port=50395, user='user', passwd='passwd', db='membership', charset='utf8')
 
     cursor = db.cursor()
 

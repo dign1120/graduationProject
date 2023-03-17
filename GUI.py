@@ -10,6 +10,7 @@ from PyQt5.QtCore import *
 from Run import runMem, runGuest, runGuestforTrayicon, runMemforTrayicon
 from RunData import initCheck
 from DB_setting import getLoginData, checkIDUnique, checkNicknameUnique, setMembership, getID, getPW, setCustomSetting, getCustomSetting
+from LoadingGUI import preMemClass
 
 
 login_form_class = uic.loadUiType("UI/loginGUI.ui")[0]
@@ -37,7 +38,6 @@ class runGuestThread(QThread):
         self.quit()
         self.wait(3000)
 
-
 class runMemThread(QThread):
 
     # 초기화 메서드 구현
@@ -61,7 +61,6 @@ class runMemThread(QThread):
         self.breakPoint = True
         self.quit()
         self.wait(3000)
-
 
 class TrayiconThread4Guest(QThread):
 
@@ -163,8 +162,8 @@ class LoginClass(QDialog, login_form_class):
         super().__init__()
         self.setupUi(self)
         self.setWindowIcon(QIcon("Image/windowIcon.png"))
-
         self.app = app
+
 
         self.id = ""
         self.password = ""
@@ -177,11 +176,13 @@ class LoginClass(QDialog, login_form_class):
         self.findBtn: QPushButton
         self.runBackgroundBtn:QPushButton
         self.minimizeBtn:QPushButton
+        self.iconlabel:QLabel
 
         self.setWindowFlags(Qt.FramelessWindowHint)
 
         self.runBackgroundBtn.setIcon(QIcon("image/closeIcon.png"))
         self.minimizeBtn.setIcon(QIcon("image/minimizeIcon.png"))
+        self.iconlabel.setPixmap(QPixmap("image/windowIcon.png").scaled(QSize(21, 20)))
 
         self.daemonThread = runGuestThread()
         self.daemonThread.start()
@@ -220,6 +221,9 @@ class LoginClass(QDialog, login_form_class):
             self.close()
             self.daemonThread.stop()
 
+            preMemThread = preMemClass(self.nickname)
+            preMemThread.exec()
+
             mainWindow = RunClass(self.app)
             mainWindow.setNickname(self.nickname)
             mainWindow.setThread()
@@ -256,6 +260,7 @@ class RunClass(QDialog, run_form_class):
 
         self.setupUi(self)
         self.titleLabel: QLabel
+        self.iconlabel:QLabel
 
         self.bookmarkCheckBox:QCheckBox
         self.visitCheckBox:QCheckBox
@@ -270,6 +275,7 @@ class RunClass(QDialog, run_form_class):
         self.runBackgroundBtn:QPushButton
         self.minimizeBtn:QPushButton
         
+        self.iconlabel.setPixmap(QPixmap("image/windowIcon.png").scaled(QSize(21, 20)))
         self.runBackgroundBtn.setIcon(QIcon("Image/closeIcon.png"))
         self.minimizeBtn.setIcon(QIcon("Image/minimizeIcon.png"))
 
@@ -352,6 +358,7 @@ class JoinClass(QDialog, join_form_class):
         self.nicknameEdit: QLineEdit
         self.joinBtn: QPushButton
         self.gotoMainBtn: QPushButton
+        self.iconlabel:QLabel
 
         self.idEdit.setText("")
         self.pwdEdit.setText("")
@@ -359,6 +366,8 @@ class JoinClass(QDialog, join_form_class):
         self.nicknameEdit.setText("")
 
         self.setWindowFlags(Qt.WindowTitleHint | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
+
+        self.iconlabel.setPixmap(QPixmap("image/windowIcon.png").scaled(QSize(21, 20)))
 
         self.joinBtn.clicked.connect(self.join)
         self.gotoMainBtn.clicked.connect(self.gotoMain)
@@ -425,8 +434,12 @@ class FindClass(QDialog, find_form_class):
         self.findIDBtn: QPushButton
         self.findPWBtn: QPushButton
         self.gotoMainBtn: QPushButton
+        self.iconlabel:QLabel
+
 
         self.setWindowFlags(Qt.WindowTitleHint | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
+
+        self.iconlabel.setPixmap(QPixmap("image/windowIcon.png").scaled(QSize(21, 20)))
 
         self.findIDBtn.clicked.connect(self.findIDFunc)
         self.findPWBtn.clicked.connect(self.findPWFunc)

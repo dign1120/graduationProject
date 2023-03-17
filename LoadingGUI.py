@@ -26,21 +26,17 @@ class focusOnThread(QThread):
         size = pyautogui.size()
         while(not self.breakPoint):
             try:
-                pyautogui.moveTo(size[0]/2, size[1]/2) 
-                if keyboard.is_pressed('win'):
-                    time.sleep(0.3)
-                    pyautogui.press('winleft')
-                if keyboard.is_pressed('alt'):
-                    time.sleep(0.3)
-                    pyautogui.press('esc')
+                pyautogui.moveTo(size[0]/2, size[1]/2)
+                for i in range(150):
+                    keyboard.block_key(i)
 
             except:
                 pass
 
     def stop(self):
         self.breakPoint = True
+        keyboard.unhook_all()
         self.terminate()
-        self.wait(3000)
 
 class preGuestThread(QThread):
     preGuest_signal = pyqtSignal()
@@ -129,7 +125,7 @@ class EncryptLoadingClass(QDialog, encryptLoading_form_class):
 
     def doneLoading(self):
         self.encryptTh.terminate()
-        self.focusOnTh.terminate()
+        self.focusOnTh.stop()
         self.close()
 
 
@@ -164,7 +160,7 @@ class DecryptLoadingClass(QDialog, decryptLoading_form_class):
 
     def doneLoading(self):
         self.decryptTh.terminate()
-        self.focusOnTh.terminate()
+        self.focusOnTh.stop()
         self.close()
 
 class preGuestClass(QDialog, preGuest_form_class):
@@ -194,8 +190,8 @@ class preGuestClass(QDialog, preGuest_form_class):
         self.focusOnTh.start()
 
     def doneProc(self):
+        self.focusOnTh.stop()
         self.preGuestTh.terminate()
-        self.focusOnTh.terminate()
         self.close()
 
 class preMemClass(QDialog, preMem_form_class):
@@ -226,5 +222,5 @@ class preMemClass(QDialog, preMem_form_class):
 
     def doneProc(self):
         self.preMemTh.terminate()
-        self.focusOnTh.terminate()
+        self.focusOnTh.stop()
         self.close()

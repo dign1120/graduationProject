@@ -8,6 +8,25 @@ from CustomCrypto import encrypt_all_files, decrypt_all_files
 from RunData import getSrcPath, getDstPath, memberFileMove, guestFileRemove
 from LoadingGUI import DecryptLoadingClass, EncryptLoadingClass, preGuestClass, focusOnThread
 
+from ctypes import Structure, windll, c_uint, sizeof, byref
+
+
+
+#input 여부 확인 -> input 없을시 타이머 시작 및 반환
+class LASTINPUTINFO(Structure):
+    _fields_ = [
+        ('cbSize', c_uint),
+        ('dwTime', c_uint),
+    ]
+
+def get_idle_duration():
+    lastInputInfo = LASTINPUTINFO()
+    lastInputInfo.cbSize = sizeof(lastInputInfo)
+    windll.user32.GetLastInputInfo(byref(lastInputInfo))
+    millis = windll.kernel32.GetTickCount() - lastInputInfo.dwTime
+    return millis / 1000.0
+
+    
 
 def runGuest(beginTimer, flag):
     check = 0
@@ -22,8 +41,8 @@ def runGuest(beginTimer, flag):
     if(check == 0 and flag == False):
         
         afterTimer = time.time()
-
-        if((int)(afterTimer - beginTimer) >= 2):   # 타이머 설정
+        print((int)(get_idle_duration()))
+        if((int)(get_idle_duration()) >= 5):   # 타이머 설정
             preGuestThread = preGuestClass(srcPath)
             preGuestThread.exec()
 
@@ -37,6 +56,8 @@ def runGuest(beginTimer, flag):
 
         return beginTimer, False
     
+
+
 def runGuestforTrayicon(beginTimer, flag):
     check = 0
     srcPath = getSrcPath()
@@ -50,8 +71,8 @@ def runGuestforTrayicon(beginTimer, flag):
 
     if(check == 0 and flag == False):
         afterTimer = time.time()
-
-        if((int)(afterTimer - beginTimer) >= 2):   # 타이머 설정
+        print((int)(get_idle_duration()))
+        if((int)(get_idle_duration()) >= 5):   # 타이머 설정
             emptyTrayicon = QSystemTrayIcon()
             emptyTrayicon.setVisible(False)
             emptyTrayicon.show()
@@ -63,8 +84,9 @@ def runGuestforTrayicon(beginTimer, flag):
             guestFileRemove(srcPath, 1)
             time.sleep(2)
             QSystemTrayIcon.showMessage(emptyTrayicon, "알림:", "개인정보를 삭제했습니다.", 1, 1000)
-            focusThread.terminate()
             emptyTrayicon.hide()
+            focusThread.stop()
+            
             return beginTimer, True
 
         return beginTimer, False
@@ -88,7 +110,6 @@ def runMem(beginTimer, flag, doubleCheck, nickname):
         if ps_name == "chrome.exe":
             check = 1
             break
-
     if(check == 1 and flag == 0):
         if doubleCheck == 0:
             os.system('taskkill /f /im chrome.exe')
@@ -115,19 +136,20 @@ def runMem(beginTimer, flag, doubleCheck, nickname):
         return beginTimer, 0, doubleCheck
     elif (check == 0 and flag == 0):
         # 파일 옮기기
-        memberFileMove(srcPath, dstPath, nickname)
-
+        
         afterTimer = time.time()
-
-        if((int)(afterTimer - beginTimer) >= 2):   # 타이머 설정
+        print((int)(get_idle_duration()))
+        if((int)(get_idle_duration()) >= 5):   # 타이머 설정
+            memberFileMove(srcPath, dstPath, nickname)
             encryptThread = EncryptLoadingClass(srcPath, dstPath, nickname)
             encryptThread.exec()
-
+            
             return beginTimer, 1, 0
         else:
             return beginTimer, 0, 0
     elif (check==0 and flag == 1):
         return beginTimer, 1, doubleCheck
+
 
 
 def runMemforTrayicon(beginTimer, flag, doubleCheck, nickname):
@@ -182,8 +204,9 @@ def runMemforTrayicon(beginTimer, flag, doubleCheck, nickname):
         memberFileMove(srcPath, dstPath, nickname)
 
         afterTimer = time.time()
-
-        if((int)(afterTimer - beginTimer) >= 2):   # 타이머 설정
+        
+        print((int)(get_idle_duration()))
+        if((int)(get_idle_duration()) >= 5):   # 타이머 설정
             emptyTrayicon = QSystemTrayIcon()
             emptyTrayicon.setVisible(False)
             emptyTrayicon.show()
