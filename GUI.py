@@ -98,7 +98,13 @@ class TrayIcon(QSystemTrayIcon):
         self.exitAction = self.menu.addAction('에이전트 종료')
         self.exitAction.triggered.connect(QCoreApplication.instance().quit)
         self.setContextMenu(self.menu)
+
+        self.logoutAction = self.menu.addAction("에이전트 로그아웃")
+        self.logoutAction.triggered.connect(self.logout)
+        self.setContextMenu(self.menu)
         
+        self.logoutAction.setEnabled(False)
+
         self.disambiguateTimer = QTimer(self)
         self.disambiguateTimer.setSingleShot(True)
         self.activated.connect(self.onTrayIconActivated)
@@ -107,6 +113,7 @@ class TrayIcon(QSystemTrayIcon):
             self.th = trayGuestThread()
             self.th.start()
         else:
+            self.logoutAction.setEnabled(True)
             self.th = trayMemThread(self.nickname)
             self.th.start()
 
@@ -127,6 +134,16 @@ class TrayIcon(QSystemTrayIcon):
                 mainWindow.setNickname(self.nickname)
                 mainWindow.setThread()
                 mainWindow.exec()
+
+    def setSeperator(self, seperator):
+        self.seperator = seperator
+
+    def logout(self):
+        self.th.terminate()
+        self.setSeperator("guest")
+        self.logoutAction.setEnabled(False)
+        self.th = trayGuestThread()
+        self.th.start()
 
     def showWindow(self):
         self.th.terminate()
@@ -151,6 +168,8 @@ class LoginClass(QDialog, login_form_class):
         self.setupUi(self)
         self.setWindowIcon(QIcon("Image/windowIcon.png"))
         self.app = app
+
+        self.oldPos = self.pos()
 
         self.id = ""
         self.password = ""
@@ -181,6 +200,21 @@ class LoginClass(QDialog, login_form_class):
         self.runBackgroundBtn.clicked.connect(self.runBackground)
 
         initCheck()
+
+
+    def center(self):
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
+
+    def mousePressEvent(self, event):
+        self.oldPos = event.globalPos()
+
+    def mouseMoveEvent(self, event):
+        delta = QPoint (event.globalPos() - self.oldPos)
+        self.move(self.x() + delta.x(), self.y() + delta.y())
+        self.oldPos = event.globalPos()
 
     def minimize(self):
         self.showMinimized()
@@ -223,13 +257,15 @@ class LoginClass(QDialog, login_form_class):
             return
 
     def btnJoinFunc(self):
+        self.center()
         self.daemonThread.terminate()	
         self.hide()
         joinWindow = JoinClass(self)
         joinWindow.exec()
         self.show()
 
-    def btnFindFunc(self):        
+    def btnFindFunc(self):
+        self.center()
         self.daemonThread.terminate()	
         self.hide()
         findWindow = FindClass(self)
@@ -243,7 +279,9 @@ class RunClass(QDialog, run_form_class):
         super().__init__()
         self.setupUi(self)
         self.app = app
-        self.trayIcon = QSystemTrayIcon(QIcon("Image/windowIcon.png"), parent = self.app)
+
+        self.center()
+        self.oldPos = self.pos()
 
         self.nickname = ""
         self.titleLabel: QLabel        
@@ -275,7 +313,21 @@ class RunClass(QDialog, run_form_class):
         self.logoutBtn.clicked.connect(self.logout)
         self.minimizeBtn.clicked.connect(self.minimize)
         self.runBackgroundBtn.clicked.connect(self.runBackground)
-    
+
+    def center(self):
+            qr = self.frameGeometry()
+            cp = QDesktopWidget().availableGeometry().center()
+            qr.moveCenter(cp)
+            self.move(qr.topLeft())
+            
+    def mousePressEvent(self, event):
+        self.oldPos = event.globalPos()
+        
+    def mouseMoveEvent(self, event):
+        delta = QPoint (event.globalPos() - self.oldPos)
+        self.move(self.x() + delta.x(), self.y() + delta.y())
+        self.oldPos = event.globalPos()
+
     def setNickname(self, nickname):
         self.nickname = nickname
         self.titleLabel.setText(nickname + " 님")
@@ -322,8 +374,6 @@ class RunClass(QDialog, run_form_class):
         trayicon = TrayIcon(QIcon('Image/windowIcon.png'), self.app, "member", self.nickname)
         trayicon.show()
 
-        self.trayIcon.hide()
-
     def logout(self):
         self.daemonThread.stop()
         self.close()
@@ -336,6 +386,9 @@ class JoinClass(QDialog, join_form_class):
     def __init__(self, parent=None):
         super().__init__()
         self.setupUi(self)
+        
+        self.center()
+        self.oldPos = self.pos()
 
         self.idEdit: QLineEdit
         self.pwdEdit: QLineEdit
@@ -362,6 +415,20 @@ class JoinClass(QDialog, join_form_class):
         self.closeBtn.clicked.connect(self.gotoMain)
         self.gotoMainBtn.clicked.connect(self.gotoMain)
         self.minimizeBtn.clicked.connect(self.minimize)
+
+    def center(self):
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
+
+    def mousePressEvent(self, event):
+        self.oldPos = event.globalPos()
+        
+    def mouseMoveEvent(self, event):
+        delta = QPoint (event.globalPos() - self.oldPos)
+        self.move(self.x() + delta.x(), self.y() + delta.y())
+        self.oldPos = event.globalPos()
 
     def checkIDValid(self, edit):
         if re.search('^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,12}$', edit) is None:
@@ -426,6 +493,9 @@ class FindClass(QDialog, find_form_class):
         super().__init__()
         self.setupUi(self)
 
+        self.center()
+        self.oldPos = self.pos()
+
         self.findIdFromNicknameEdit: QLineEdit
         self.findPwFromIDEdit: QLineEdit
         self.findPwFromNicknameEdit: QLineEdit
@@ -449,6 +519,19 @@ class FindClass(QDialog, find_form_class):
         self.minimizeBtn.clicked.connect(self.minimize)
         self.gotoMainBtn.clicked.connect(self.gotoMain)
 
+    def center(self):
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
+
+    def mousePressEvent(self, event):
+        self.oldPos = event.globalPos()
+        
+    def mouseMoveEvent(self, event):
+        delta = QPoint (event.globalPos() - self.oldPos)
+        self.move(self.x() + delta.x(), self.y() + delta.y())
+        self.oldPos = event.globalPos()
 
     def findIDFunc(self):
         QMessageBox.setStyleSheet(
