@@ -2,15 +2,12 @@ import os
 import psutil
 import time
 import webbrowser
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QSystemTrayIcon
+from ctypes import Structure, windll, c_uint, sizeof, byref
 
 from CustomCrypto import encrypt_all_files, decrypt_all_files
 from RunData import getSrcPath, getDstPath, memberFileMove, guestFileRemove
 from LoadingGUI import DecryptLoadingClass, EncryptLoadingClass, preGuestClass, focusOnThread
-
-from ctypes import Structure, windll, c_uint, sizeof, byref
-
-
 
 #input 여부 확인 -> input 없을시 타이머 시작 및 반환
 class LASTINPUTINFO(Structure):
@@ -26,9 +23,8 @@ def get_idle_duration():
     millis = windll.kernel32.GetTickCount() - lastInputInfo.dwTime
     return millis / 1000.0
 
-    
 
-def runGuest(beginTimer, flag):
+def runGuest(flag):
     check = 0
     srcPath = getSrcPath()
 
@@ -38,68 +34,24 @@ def runGuest(beginTimer, flag):
         if ps_name == "chrome.exe":
             check = 1
             break
+
     if(check == 0 and flag == False):
-        
-        afterTimer = time.time()
-        print((int)(get_idle_duration()))
-        if((int)(get_idle_duration()) >= 5):   # 타이머 설정
+        guestFileRemove(srcPath, 0)
+
+        if((int)(get_idle_duration()) >= 60):   # 타이머 설정
             preGuestThread = preGuestClass(srcPath)
             preGuestThread.exec()
 
-            return beginTimer, True
+            return True
 
-        return beginTimer, False
+        return False
     elif (check == 0 and flag == True):
-        return beginTimer, flag
+        return flag
     else:
-        beginTimer = time.time()
-
-        return beginTimer, False
-    
+        return False
 
 
-def runGuestforTrayicon(beginTimer, flag):
-    check = 0
-    srcPath = getSrcPath()
-
-    for proc in psutil.process_iter():    # 실행중인 프로세스를 순차적으로 검색
-        ps_name = proc.name()               # 프로세스 이름을 ps_name에 할당
-
-        if ps_name == "chrome.exe":
-            check = 1
-            break
-
-    if(check == 0 and flag == False):
-        afterTimer = time.time()
-        print((int)(get_idle_duration()))
-        if((int)(get_idle_duration()) >= 5):   # 타이머 설정
-            emptyTrayicon = QSystemTrayIcon()
-            emptyTrayicon.setVisible(False)
-            emptyTrayicon.show()
-            
-            focusThread = focusOnThread()
-            focusThread.start()
-            QSystemTrayIcon.showMessage(emptyTrayicon, "알림:", "개인정보 삭제 중...", 1, 1000)
-            guestFileRemove(srcPath, 0)
-            guestFileRemove(srcPath, 1)
-            time.sleep(2)
-            QSystemTrayIcon.showMessage(emptyTrayicon, "알림:", "개인정보를 삭제했습니다.", 1, 1000)
-            emptyTrayicon.hide()
-            focusThread.stop()
-            
-            return beginTimer, True
-
-        return beginTimer, False
-    elif (check == 0 and flag == True):
-        return beginTimer, flag
-    else:
-        beginTimer = time.time()
-
-        return beginTimer, False
-
-
-
-def runMem(beginTimer, flag, doubleCheck, nickname):
+def runMem(flag, nickname):
     check = 0
     srcPath = getSrcPath()
     dstPath = getDstPath(nickname)
@@ -110,18 +62,13 @@ def runMem(beginTimer, flag, doubleCheck, nickname):
         if ps_name == "chrome.exe":
             check = 1
             break
-    if(check == 1 and flag == 0):
-        if doubleCheck == 0:
-            os.system('taskkill /f /im chrome.exe')
-            time.sleep(3)
-            # 파일 옮기기
-            memberFileMove(dstPath, srcPath, nickname)
-            webbrowser.open("https://google.com")
-        beginTimer = time.time()
 
-        return beginTimer, 0, 1
+    if(check == 1 and flag == False):
+        # 파일 옮기기
+        memberFileMove(dstPath, srcPath, nickname)
 
-    elif(check == 1 and flag == 1):
+        return False
+    elif(check == 1 and flag == True):
         os.system('taskkill /f /im chrome.exe')
 
         decryptThread = DecryptLoadingClass(dstPath, nickname)
@@ -131,28 +78,58 @@ def runMem(beginTimer, flag, doubleCheck, nickname):
         memberFileMove(dstPath, srcPath, nickname)
 
         webbrowser.open("https://google.com")
-        beginTimer = time.time()
 
-        return beginTimer, 0, doubleCheck
-    elif (check == 0 and flag == 0):
+        return False
+    elif (check == 0 and flag == False):
         # 파일 옮기기
-        
-        afterTimer = time.time()
-        print((int)(get_idle_duration()))
-        if((int)(get_idle_duration()) >= 5):   # 타이머 설정
-            memberFileMove(srcPath, dstPath, nickname)
+        memberFileMove(srcPath, dstPath, nickname)
+
+        if((int)(get_idle_duration()) >= 60):   # 타이머 설정
             encryptThread = EncryptLoadingClass(srcPath, dstPath, nickname)
             encryptThread.exec()
-            
-            return beginTimer, 1, 0
+
+            return True
         else:
-            return beginTimer, 0, 0
-    elif (check==0 and flag == 1):
-        return beginTimer, 1, doubleCheck
+            return False
+    elif (check==0 and flag == True):
+        return True
 
+def trayGuest(flag):
+    check = 0
+    srcPath = getSrcPath()
 
+    for proc in psutil.process_iter():    # 실행중인 프로세스를 순차적으로 검색
+        ps_name = proc.name()               # 프로세스 이름을 ps_name에 할당
 
-def runMemforTrayicon(beginTimer, flag, doubleCheck, nickname):
+        if ps_name == "chrome.exe":
+            check = 1
+            break
+
+    if(check == 0 and flag == False):
+        guestFileRemove(srcPath, 0)
+
+        if((int)(get_idle_duration()) >= 60):   # 타이머 설정
+            emptyTrayicon = QSystemTrayIcon()
+            emptyTrayicon.setVisible(False)
+            emptyTrayicon.show()
+            
+            focusThread = focusOnThread()
+            focusThread.start()
+            QSystemTrayIcon.showMessage(emptyTrayicon, "알림:", "개인정보 삭제 중...", 1, 1000)
+            guestFileRemove(srcPath, 1)
+            time.sleep(2)
+            focusThread.stop()
+            QSystemTrayIcon.showMessage(emptyTrayicon, "알림:", "개인정보를 삭제했습니다.", 1, 1000)
+            
+            return True
+
+        return False
+    elif (check == 0 and flag == True):
+        return flag
+    else:
+        return False
+
+def trayMem(flag, nickname):
     check = 0
     srcPath = getSrcPath()
     dstPath = getDstPath(nickname)
@@ -164,18 +141,13 @@ def runMemforTrayicon(beginTimer, flag, doubleCheck, nickname):
             check = 1
             break
 
-    if(check == 1 and flag == 0):
-        if doubleCheck == 0:
-            os.system('taskkill /f /im chrome.exe')
-            time.sleep(3)
-            # 파일 옮기기
-            memberFileMove(dstPath, srcPath, nickname)
-            webbrowser.open("https://google.com")
-        beginTimer = time.time()
+    if(check == 1 and flag == False):
+        # 파일 옮기기
+        memberFileMove(dstPath, srcPath, nickname)
 
-        return beginTimer, 0, 1
+        return False
 
-    elif(check == 1 and flag == 1):
+    elif(check == 1 and flag == True):
         os.system('taskkill /f /im chrome.exe')
 
         emptyTrayicon = QSystemTrayIcon()
@@ -196,17 +168,13 @@ def runMemforTrayicon(beginTimer, flag, doubleCheck, nickname):
         memberFileMove(dstPath, srcPath, nickname)
 
         webbrowser.open("https://google.com")
-        beginTimer = time.time()
 
-        return beginTimer, 0, doubleCheck
-    elif (check == 0 and flag == 0):
+        return False
+    elif (check == 0 and flag == False):
         # 파일 옮기기
         memberFileMove(srcPath, dstPath, nickname)
 
-        afterTimer = time.time()
-        
-        print((int)(get_idle_duration()))
-        if((int)(get_idle_duration()) >= 5):   # 타이머 설정
+        if((int)(get_idle_duration()) >= 60):   # 타이머 설정
             emptyTrayicon = QSystemTrayIcon()
             emptyTrayicon.setVisible(False)
             emptyTrayicon.show()
@@ -220,8 +188,8 @@ def runMemforTrayicon(beginTimer, flag, doubleCheck, nickname):
             time.sleep(1)
             focusThread.terminate()
             emptyTrayicon.hide()
-            return beginTimer, 1, 0
+            return True
         else:
-            return beginTimer, 0, 0
-    elif (check==0 and flag == 1):
-        return beginTimer, 1, doubleCheck
+            return False
+    elif (check==0 and flag == True):
+        return True

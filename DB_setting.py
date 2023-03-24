@@ -1,7 +1,7 @@
 import pymysql
 
 def basicProcess(sql, flag):
-    db = pymysql.connect(host='52.78.219.165', port=50395, user='user', passwd='passwd', db='membership', charset='utf8')
+    db = pymysql.connect(host='43.201.104.255', port=56495, user='user', passwd='passwd', db='membership', charset='utf8')
 
     cursor = db.cursor()
 
@@ -20,7 +20,7 @@ def basicProcess(sql, flag):
 
 def getLoginData(id, password):
     sql = """
-        SELECT nickname FROM account WHERE id='{}' AND pw='{}';
+        SELECT nickname FROM account WHERE id='{}' AND pw=hex(aes_encrypt('{}','ONabWBfohZuMburw'));
         """.format(id, password)
 
     data = basicProcess(sql, 1)
@@ -56,7 +56,7 @@ def checkNicknameUnique(nickname):
 
 def setMembership(id, password, nickname):
     sql = """
-        INSERT INTO account (id, pw, nickname) VALUES('{}','{}','{}');
+        INSERT INTO account (id, pw, nickname) VALUES('{}', hex(aes_encrypt('{}','ONabWBfohZuMburw')),'{}');
         """.format(id, password, nickname)
 
     basicProcess(sql, 0)
@@ -81,22 +81,22 @@ def getID(nickname):
 
 def getPW(id, nickname):
     sql = """
-        SELECT pw FROM account WHERE id='{}' AND nickname='{}';
+        SELECT aes_decrypt(unhex(pw),'ONabWBfohZuMburw') FROM account WHERE id='{}' AND nickname='{}';
         """.format(id, nickname)
 
     data = basicProcess(sql, 1)
 
     if(data):
-        return True, data[0][0]
+        return True, data[0][0].decode('ascii')
     else:
         return False, None
 
-def setCustomSetting(visitCheck, downloadCheck, bookmarkCheck, autoFormCheck, cookieCheck, cacheCheck, sessionCheck, nickname):
+def setCustomSetting(bookmarkCheck, visitCheck, downloadCheck, autoFormCheck, cookieCheck, cacheCheck, sessionCheck, nickname):
     sql="""
     UPDATE custom_setting 
     SET bookmark='{}', history='{}', download='{}', metadata='{}', cookie='{}', cache='{}', session='{}'
     WHERE nickname='{}'
-    """.format(visitCheck, downloadCheck, bookmarkCheck, autoFormCheck, cookieCheck, cacheCheck, sessionCheck, nickname)
+    """.format(bookmarkCheck, visitCheck, downloadCheck, autoFormCheck, cookieCheck, cacheCheck, sessionCheck, nickname)
 
     data = basicProcess(sql, 0)
 
