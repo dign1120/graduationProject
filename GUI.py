@@ -37,6 +37,7 @@ class runGuestThread(QThread):
 
 
 class runMemThread(QThread):
+    encrypt_signal = pyqtSignal(bool)
 
     # 초기화 메서드 구현
     def __init__(self, nickname):
@@ -47,10 +48,11 @@ class runMemThread(QThread):
 
     # 쓰레드로 동작시킬 함수 내용 구현
     def run(self):
-
-        while(not self.breakPoint):
-            self.flag = runMem(self.flag, self.nickname)
-
+        is_encrypted = False
+        while(not self.breakPoint and is_encrypted == False):
+            self.flag, is_encrypted = runMem(self.flag, self.nickname)
+            if is_encrypted == True:
+                self.encrypt_signal.emit(is_encrypted)
     def stop(self):
         self.breakPoint = True
         self.quit()
@@ -70,17 +72,19 @@ class trayGuestThread(QThread):
 
 
 class trayMemThread(QThread):
-
+    encrypt_signal = pyqtSignal(bool)
     def __init__(self, nickname, parent=None):
         super().__init__()
         self.breakPoint = False
         self.nickname = nickname
         self.flag = False
-
     def run(self):
+        is_encrypted = False
+        while(not self.breakPoint and is_encrypted == False):
+            self.flag, is_encrypted = trayMem(self.flag, self.nickname)
+            if is_encrypted == True:
+                self.encrypt_signal.emit(is_encrypted)
 
-        while(not self.breakPoint):
-            self.flag = trayMem(self.flag, self.nickname)
 
 #트레이 아이콘
 class TrayIcon(QSystemTrayIcon):
@@ -116,6 +120,7 @@ class TrayIcon(QSystemTrayIcon):
             self.logoutAction.setEnabled(True)
             self.th = trayMemThread(self.nickname)
             self.th.start()
+            self.th.encrypt_signal.connect(self.logout)
 
 
     def onTrayIconActivated(self, reason):
@@ -353,6 +358,7 @@ class RunClass(QDialog, run_form_class):
         # start 메소드 호출 -> 자동으로 run 메소드 호출
         self.daemonThread = runMemThread(self.nickname)
         self.daemonThread.start()
+        self.daemonThread.encrypt_signal.connect(self.logout)
 
     def setDB(self):
         bookmarkCheck = 1 if self.bookmarkCheckBox.isChecked() is True else 0
@@ -379,6 +385,7 @@ class RunClass(QDialog, run_form_class):
         self.close()
         preGuest = LoginClass(self.app)
         preGuest.exec()
+
 
 
 # 회원가입 gui
