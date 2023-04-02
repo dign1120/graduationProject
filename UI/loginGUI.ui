@@ -553,7 +553,7 @@ border-right:transparent;</string>
     <property name="font">
      <font>
       <family>HY견고딕</family>
-      <pointsize>10</pointsize>
+      <pointsize>8</pointsize>
       <weight>50</weight>
       <bold>false</bold>
      </font>
@@ -571,7 +571,7 @@ background-color:#9E9E9E;
  }</string>
     </property>
     <property name="text">
-     <string>ID/PW 찾기</string>
+     <string>ID찾기/PW재설정</string>
     </property>
    </widget>
    <widget class="QPushButton" name="joinBtn">
@@ -758,7 +758,7 @@ background-color:#9E9E9E;
     <property name="font">
      <font>
       <family>HY견고딕</family>
-      <pointsize>10</pointsize>
+      <pointsize>8</pointsize>
       <weight>50</weight>
       <bold>false</bold>
      </font>

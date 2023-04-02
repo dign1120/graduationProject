@@ -21,6 +21,7 @@ def get_idle_duration():
     lastInputInfo.cbSize = sizeof(lastInputInfo)
     windll.user32.GetLastInputInfo(byref(lastInputInfo))
     millis = windll.kernel32.GetTickCount() - lastInputInfo.dwTime
+
     return millis / 1000.0
 
 
@@ -50,10 +51,8 @@ def runGuest(flag):
     else:
         return False
 
-
 def runMem(flag, nickname):
     check = 0
-    is_encrypted = False
     srcPath = getSrcPath()
     dstPath = getDstPath(nickname)
 
@@ -68,7 +67,7 @@ def runMem(flag, nickname):
         # 파일 옮기기
         memberFileMove(dstPath, srcPath, nickname)
 
-        return False, is_encrypted
+        return False
     elif(check == 1 and flag == True):
         os.system('taskkill /f /im chrome.exe')
 
@@ -80,7 +79,7 @@ def runMem(flag, nickname):
 
         webbrowser.open("https://google.com")
 
-        return False, is_encrypted
+        return False
     elif (check == 0 and flag == False):
         # 파일 옮기기
         memberFileMove(srcPath, dstPath, nickname)
@@ -88,13 +87,12 @@ def runMem(flag, nickname):
         if((int)(get_idle_duration()) >= 60):   # 타이머 설정
             encryptThread = EncryptLoadingClass(srcPath, dstPath, nickname)
             encryptThread.exec()
-            is_encrypted = True
 
-            return True, is_encrypted
+            return True
         else:
-            return False, is_encrypted
+            return False
     elif (check==0 and flag == True):
-        return True, is_encrypted
+        return True
 
 def trayGuest(flag):
     check = 0
@@ -122,8 +120,8 @@ def trayGuest(flag):
             time.sleep(2)
             focusThread.stop()
             QSystemTrayIcon.showMessage(emptyTrayicon, "알림:", "개인정보를 삭제했습니다.", 1, 1000)
-            is_encrypted = True
-            return True, 
+            
+            return True
 
         return False
     elif (check == 0 and flag == True):
@@ -133,7 +131,6 @@ def trayGuest(flag):
 
 def trayMem(flag, nickname):
     check = 0
-    is_encrypted = False
     srcPath = getSrcPath()
     dstPath = getDstPath(nickname)
 
@@ -148,7 +145,7 @@ def trayMem(flag, nickname):
         # 파일 옮기기
         memberFileMove(dstPath, srcPath, nickname)
 
-        return False, is_encrypted
+        return False
 
     elif(check == 1 and flag == True):
         os.system('taskkill /f /im chrome.exe')
@@ -172,7 +169,7 @@ def trayMem(flag, nickname):
 
         webbrowser.open("https://google.com")
 
-        return False, is_encrypted
+        return False
     elif (check == 0 and flag == False):
         # 파일 옮기기
         memberFileMove(srcPath, dstPath, nickname)
@@ -191,9 +188,8 @@ def trayMem(flag, nickname):
             time.sleep(1)
             focusThread.terminate()
             emptyTrayicon.hide()
-            is_encrypted = True
-            return True, is_encrypted
+            return True
         else:
-            return False, is_encrypted
+            return False
     elif (check==0 and flag == True):
-        return True, is_encrypted
+        return True

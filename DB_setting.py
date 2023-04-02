@@ -1,7 +1,7 @@
 import pymysql
 
 def basicProcess(sql, flag):
-    db = pymysql.connect(host='43.201.104.255', port=57892, user='user', passwd='passwd', db='membership', charset='utf8')
+    db = pymysql.connect(host='52.78.193.207', port=56915, user='user', passwd='passwd', db='membership', charset='utf8')
 
     cursor = db.cursor()
 
@@ -54,16 +54,25 @@ def checkNicknameUnique(nickname):
     else:
         return True
 
-def setMembership(id, password, nickname):
+def setMembership(id, password, email, nickname):
     sql = """
-        INSERT INTO account (id, pw, nickname) VALUES('{}', hex(aes_encrypt('{}','ONabWBfohZuMburw')),'{}');
-        """.format(id, password, nickname)
+        INSERT INTO account (id, pw, email, nickname) VALUES('{}', hex(aes_encrypt('{}','ONabWBfohZuMburw')),'{}','{}');
+        """.format(id, password, email, nickname)
 
     basicProcess(sql, 0)
 
     sql = """
         INSERT INTO custom_setting (nickname, bookmark, history, download, metadata, cookie, cache, session) VALUES('{}','1','1','1','1','1','1','1');
         """.format(nickname)
+
+    basicProcess(sql, 0)
+
+def resetPw(newPw, nickname):
+    sql="""
+    UPDATE account 
+    SET pw= hex(aes_encrypt('{}','ONabWBfohZuMburw'))
+    WHERE nickname='{}'
+    """.format(newPw, nickname)
 
     basicProcess(sql, 0)
 
@@ -78,16 +87,16 @@ def getID(nickname):
         return True, data[0][0]
     else:
         return False, None
-
-def getPW(id, nickname):
+    
+def getEmail(id, nickname):
     sql = """
-        SELECT aes_decrypt(unhex(pw),'ONabWBfohZuMburw') FROM account WHERE id='{}' AND nickname='{}';
+        SELECT email FROM account WHERE id='{}' AND nickname='{}';
         """.format(id, nickname)
-
+    
     data = basicProcess(sql, 1)
 
-    if(data):
-        return True, data[0][0].decode('ascii')
+    if data:
+        return True, data[0][0]
     else:
         return False, None
 

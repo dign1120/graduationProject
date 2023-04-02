@@ -496,7 +496,7 @@ background-color:#9E9E9E;
  }</string>
     </property>
     <property name="text">
-     <string>PW 찾기</string>
+     <string>PW 재설정</string>
     </property>
    </widget>
    <widget class="QLabel" name="nickNameLabel2">
@@ -643,7 +643,7 @@ text-align:center;
 border-right:transparent;</string>
     </property>
     <property name="text">
-     <string>PW 찾기</string>
+     <string>PW 재설정</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
