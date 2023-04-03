@@ -1,7 +1,7 @@
 import pymysql
 
 def basicProcess(sql, flag):
-    db = pymysql.connect(host='52.78.193.207', port=56915, user='user', passwd='passwd', db='membership', charset='utf8')
+    db = pymysql.connect(host='52.78.193.207', port=55690, user='user', passwd='passwd', db='membership', charset='utf8')
 
     cursor = db.cursor()
 
@@ -20,7 +20,7 @@ def basicProcess(sql, flag):
 
 def getLoginData(id, password):
     sql = """
-        SELECT nickname FROM account WHERE id='{}' AND pw=hex(aes_encrypt('{}','ONabWBfohZuMburw'));
+        SELECT nickname FROM account WHERE id='{}' AND pw=SHA2('{}', 512);
         """.format(id, password)
 
     data = basicProcess(sql, 1)
@@ -56,7 +56,7 @@ def checkNicknameUnique(nickname):
 
 def setMembership(id, password, email, nickname):
     sql = """
-        INSERT INTO account (id, pw, email, nickname) VALUES('{}', hex(aes_encrypt('{}','ONabWBfohZuMburw')),'{}','{}');
+        INSERT INTO account (id, pw, email, nickname) VALUES('{}', SHA2('{}', 512),'{}','{}');
         """.format(id, password, email, nickname)
 
     basicProcess(sql, 0)
