@@ -21,8 +21,8 @@ def sendMail(address):
     code = generateCode()
 
     # 이메일 주소와 암호 입력
-    MY_ADDRESS = 'dign1120@naver.com'
-    MY_PASSWORD = 'dpfthem40043029!'
+    MY_ADDRESS = 'dign1120@gmail.com'
+    MY_PASSWORD = '30297173'
 
     # 수신자 이메일 주소 입력
     TO_ADDRESS = address

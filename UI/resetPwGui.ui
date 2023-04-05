@@ -84,6 +84,9 @@ border: transparent;
     <property name="styleSheet">
      <string notr="true">background-color:#ffffff;</string>
     </property>
+    <property name="echoMode">
+     <enum>QLineEdit::Password</enum>
+    </property>
     <property name="alignment">
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
     </property>
@@ -420,6 +423,9 @@ border-right:transparent;</string>
     <property name="text">
      <string/>
     </property>
+    <property name="echoMode">
+     <enum>QLineEdit::Password</enum>
+    </property>
     <property name="alignment">
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
     </property>
@@ -507,11 +513,41 @@ background-color:#EFEFED;
     <string/>
    </property>
   </widget>
+  <widget class="QLabel" name="iconlabel_2">
+   <property name="geometry">
+    <rect>
+     <x>15</x>
+     <y>2</y>
+     <width>111</width>
+     <height>30</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Arial</family>
+     <pointsize>11</pointsize>
+     <weight>50</weight>
+     <bold>false</bold>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: black;
+background-color: transparent;
+text-align:center;</string>
+   </property>
+   <property name="text">
+    <string>PIM AGENT</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
   <zorder>titleLabel_3</zorder>
   <zorder>iconlabel</zorder>
   <zorder>frame</zorder>
   <zorder>closeBtn</zorder>
   <zorder>minimizeBtn</zorder>
+  <zorder>iconlabel_2</zorder>
  </widget>
  <resources/>
  <connections/>
