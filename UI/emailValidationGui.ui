@@ -344,7 +344,7 @@ border-right:transparent;</string>
      <bool>true</bool>
     </property>
    </widget>
-   <widget class="QPushButton" name="validBtn_2">
+   <widget class="QPushButton" name="validBtn">
     <property name="geometry">
      <rect>
       <x>110</x>
