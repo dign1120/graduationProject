@@ -13,6 +13,9 @@
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">background-color:qlineargradient(spread:pad, x1:0.5, y1:0.432, x2:0.499682, y2:0.551, stop:0 rgba(215, 215, 215, 255), stop:1 rgba(239, 239, 237, 255))</string>
+  </property>
   <widget class="QFrame" name="frame">
    <property name="geometry">
     <rect>

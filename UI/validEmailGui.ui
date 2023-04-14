@@ -323,7 +323,7 @@ border-right:transparent;</string>
     <property name="geometry">
      <rect>
       <x>50</x>
-      <y>70</y>
+      <y>65</y>
       <width>351</width>
       <height>41</height>
      </rect>
@@ -338,7 +338,11 @@ border-right:transparent;</string>
      <string notr="true">border:trasparent;</string>
     </property>
     <property name="text">
-     <string>EmailLabel</string>
+     <string>인증 코드가 포함된 이메일이
+가입시 입력한 이메일로 전송되었습니다.</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
     </property>
     <property name="wordWrap">
      <bool>true</bool>
