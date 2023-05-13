@@ -8,13 +8,12 @@ from PyQt5.QtGui import *
 from PyQt5 import uic, QtCore
 from PyQt5.QtCore import *
 
-from CustomCrypto import encrypt_all_files, decrypt_all_files
+from CustomCrypto import encrypt_all_files
 from RunData import guestFileRemove, initLocalCheck, memberFileRemove
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 encryptLoading_form_class = uic.loadUiType(BASE_DIR + r'\UI\encryptLoadingGUI.ui')[0]
-decryptLoading_form_class = uic.loadUiType(BASE_DIR + r'\UI\decryptLoadingGUI.ui')[0]
 preGuest_form_class = uic.loadUiType(BASE_DIR + r'\UI\preGuestGui.ui')[0]
 preMem_form_class = uic.loadUiType(BASE_DIR + r'\UI\preMemGui.ui')[0]
 
@@ -34,11 +33,6 @@ class focusOnThread(QThread):
             except:
                 pass
 
-    def stop(self):
-        self.breakPoint = True
-        self.terminate()
-        self.wait(3000)
-
 
 class preGuestThread(QThread):
     preGuest_signal = pyqtSignal()
@@ -50,53 +44,45 @@ class preGuestThread(QThread):
     def run(self):
         guestFileRemove(self.srcPath, 0)
         guestFileRemove(self.srcPath, 1)
+        time.sleep(3)
         self.preGuest_signal.emit()
+
 
 
 class preMemThread(QThread):
     preMem_signal = pyqtSignal()
 
-    def __init__(self, nickname):
+    def __init__(self, nickname, member_setting):
         super().__init__()
         self.nickname = nickname
+        self.member_setting = member_setting
 
     def run(self):
         os.system('taskkill /f /im chrome.exe')
-        initLocalCheck(self.nickname)
+        initLocalCheck(self.nickname, self.member_setting)
         time.sleep(1)
         self.preMem_signal.emit()
-
+    
 
 class encryptThread(QThread):
     encrypt_signal = pyqtSignal()
 
-    def __init__(self, srcPath, dstPath, nickname):
+    def __init__(self, srcPath, dstPath, nickname, member_setting):
         super().__init__()
         self.srcPath = srcPath
         self.dstPath = dstPath
         self.nickname = nickname
+        self.member_setting = member_setting
 
     def run(self):
         encrypt_all_files(self.dstPath, self.nickname)
+        memberFileRemove(self.srcPath, self.nickname, self.member_setting)
+        time.sleep(1)
         self.encrypt_signal.emit()
-
-
-class decryptThread(QThread):
-    decrypt_signal = pyqtSignal()
-
-    def __init__(self, dstPath, nickname):
-        super().__init__()
-        self.dstPath = dstPath
-        self.nickname = nickname
-
-    def run(self):
-        decrypt_all_files(self.dstPath, self.nickname)
-        self.decrypt_signal.emit()
-
 
 class EncryptLoadingClass(QDialog, encryptLoading_form_class):
 
-    def __init__(self, srcPath, dstPath, nickname):
+    def __init__(self, srcPath, dstPath, nickname, member_setting):
         super().__init__()
         self.setupUi(self)
         self.setWindowIcon(QIcon(BASE_DIR + r"\Image\windowIcon.png"))
@@ -105,6 +91,7 @@ class EncryptLoadingClass(QDialog, encryptLoading_form_class):
         self.srcPath = srcPath
         self.dstPath = dstPath
         self.nickname = nickname
+        self.member_setting = member_setting
 
         self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint |
                             Qt.FramelessWindowHint)
@@ -118,7 +105,7 @@ class EncryptLoadingClass(QDialog, encryptLoading_form_class):
         self.encryptLoadingGIF.setMovie(self.loadingmovie)
         self.loadingmovie.start()
 
-        self.encryptTh = encryptThread(self.srcPath, self.dstPath, self.nickname)
+        self.encryptTh = encryptThread(self.srcPath, self.dstPath, self.nickname, self.member_setting)
         self.focusOnTh = focusOnThread()
 
         self.encryptTh.encrypt_signal.connect(self.doneLoading)
@@ -128,44 +115,6 @@ class EncryptLoadingClass(QDialog, encryptLoading_form_class):
 
     def doneLoading(self):
         self.encryptTh.terminate()
-        self.focusOnTh.terminate()
-        keyboard.unhook_all()
-        self.close()
-
-
-class DecryptLoadingClass(QDialog, decryptLoading_form_class):
-    def __init__(self, dstPath, nickname):
-        super().__init__()
-        self.setupUi(self)
-        self.setWindowIcon(QIcon(BASE_DIR + r"\Image\windowIcon.png"))
-
-        self.decryptLoadingGIF: QLabel
-
-        self.dstPath = dstPath
-        self.nickname = nickname
-
-        self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint |
-                            Qt.FramelessWindowHint)
-
-        # 동적 이미지 추가
-        self.loadingmovie = QMovie(
-            BASE_DIR + r'\Image\loadingImg.gif', QByteArray(), self)
-        self.loadingmovie.setCacheMode(QMovie.CacheAll)
-
-        # QLabel에 동적 이미지 삽입
-        self.decryptLoadingGIF.setMovie(self.loadingmovie)
-        self.loadingmovie.start()
-
-        self.decryptTh = decryptThread(self.dstPath, self.nickname)
-        self.focusOnTh = focusOnThread()
-
-        self.decryptTh.decrypt_signal.connect(self.doneLoading)
-
-        self.decryptTh.start()
-        self.focusOnTh.start()
-
-    def doneLoading(self):
-        self.decryptTh.terminate()
         self.focusOnTh.terminate()
         keyboard.unhook_all()
         self.close()
@@ -206,12 +155,13 @@ class preGuestClass(QDialog, preGuest_form_class):
 
 
 class preMemClass(QDialog, preMem_form_class):
-    def __init__(self, nickname):
+    def __init__(self, nickname, member_setting):
         super().__init__()
         self.setupUi(self)
         self.setWindowIcon(QIcon(BASE_DIR + r"\Image\windowIcon.png"))
         self.preMemGIF: QLabel
         self.nickname = nickname
+        self.member_setting = member_setting
 
         self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint |
                             Qt.FramelessWindowHint)
@@ -225,7 +175,7 @@ class preMemClass(QDialog, preMem_form_class):
         self.preMemGIF.setMovie(self.loadingmovie)
         self.loadingmovie.start()
 
-        self.preMemTh = preMemThread(self.nickname)
+        self.preMemTh = preMemThread(self.nickname, self.member_setting)
         self.focusOnTh = focusOnThread()
 
         self.preMemTh.preMem_signal.connect(self.doneProc)

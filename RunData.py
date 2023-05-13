@@ -2,42 +2,40 @@ import os
 import shutil
 import random
 import math
+import time
 
-from DB_setting import getCustomSetting
 from CustomCrypto import decrypt_all_files
 
-def getControlDataNames(nickname):
+def getControlDataNames(nickname, member_setting):
     if(nickname == None):
-        checkRetval = [1,1,1,1,1,1,1]
-    else:
-        checkRetval = getCustomSetting(nickname)
+        member_setting = [1,1,1,1,1,1,1]
+
     controlDataNames = []
 
-    if checkRetval[0] == 1:
+    if member_setting[0] == 1:
         controlDataNames.extend(["/Bookmarks", "/Bookmarks.bak"])
-    if checkRetval[1] == 1:
+    if member_setting[1] == 1:
         controlDataNames.extend(["/History", "/History-journal", "/Visited Links"])
-    if checkRetval[2] == 1:
+    if member_setting[2] == 1:
         controlDataNames.extend(["/DownloadMetadata"])
-    if checkRetval[3] == 1:
+    if member_setting[3] == 1:
         controlDataNames.extend(["/Login Data", "/Login Data For Account", "/Login Data-journal", "/Preferences", "/Shortcuts", 
                                     "/Shortcuts-journal", "/Top Sites", "/Top Sites-journal", "/Web Data", "/Web Data-journal", 
                                     "/Local State", "/IndexedDB", "/Storage", "/Sync App Settings", "/Sync Data", "/WebStorage"])
 
     return controlDataNames
 
-def getRemoveDataNames(nickname):
+def getRemoveDataNames(nickname, member_setting):
     if(nickname == None):
-        checkRetval = [1,1,1,1,1,1,1]
-    else:
-        checkRetval = getCustomSetting(nickname)
+        member_setting = [1,1,1,1,1,1,1]
+
     removeDataNames = []
 
-    if checkRetval[4] == 1:
+    if member_setting[4] == 1:
         removeDataNames.extend(["/Cookies"])
-    if checkRetval[5] == 1:
+    if member_setting[5] == 1:
         removeDataNames.extend(["/cache", "/Code cache", "DawnCache"])
-    if checkRetval[6] == 1:
+    if member_setting[6] == 1:
         removeDataNames.extend(["/Session Storage", "/Sessions"])
 
     return removeDataNames
@@ -58,7 +56,7 @@ def initCheck():
     if(not os.path.isdir(dirPath)):
         os.mkdir(dirPath)
 
-def initLocalCheck(nickname):
+def initLocalCheck(nickname, member_setting):
     srcPath = getSrcPath()
     dstPath = os.path.expanduser('~/AppData/Local/PIM_AGENT/').replace('\\', '/') + nickname
 
@@ -68,10 +66,10 @@ def initLocalCheck(nickname):
     decrypt_all_files(dstPath, nickname)
 
     # 파일 옮기기
-    memberFileMove(dstPath, srcPath, nickname)
+    memberFileMove(dstPath, srcPath, nickname, member_setting)
 
-def memberFileMove(srcPath, dstPath, nickname):
-    filenames = getControlDataNames(nickname)
+def memberFileMove(srcPath, dstPath, nickname, member_setting):
+    filenames = getControlDataNames(nickname, member_setting)
 
     for filename in filenames:
         if(os.path.isfile(srcPath + filename)):
@@ -84,8 +82,8 @@ def memberFileMove(srcPath, dstPath, nickname):
                 shutil.rmtree(dstPath + filename)
             shutil.move(srcPath + filename, dstPath + filename)
 
-def memberFileRemove(srcPath, nickname):
-    filenames = getRemoveDataNames(nickname)
+def memberFileRemove(srcPath, nickname, member_setting):
+    filenames = getRemoveDataNames(nickname, member_setting)
     multiProfilePath = srcPath.replace('\\', '/')[:-8]
     multiProfilenames = getMultiProfilenames()
 
@@ -108,16 +106,19 @@ def guestFileRemove(srcPath, flag):
     multiProfilenames = getMultiProfilenames()
 
     if(flag == 0):
-        filenames = getControlDataNames(None)
+        filenames = getControlDataNames(None, None)
     else:
-        filenames = getRemoveDataNames(None)
+        filenames = getRemoveDataNames(None, None)
 
     for filename in filenames:
-        if(os.path.isfile(srcPath + filename)):
+        if(os.path.exists(srcPath + filename) and os.path.isfile(srcPath + filename)):
             os.remove(srcPath + filename)
+            time.sleep(0.1)
 
-        elif(os.path.isdir(srcPath + filename)):
+        elif(os.path.exists(srcPath + filename) and os.path.isdir(srcPath + filename)):
             shutil.rmtree(srcPath + filename)
+            time.sleep(0.1)
+
     
     i = 1
     while(os.path.exists(multiProfilePath + multiProfilenames[0] + str(i))):
