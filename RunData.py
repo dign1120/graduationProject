@@ -113,12 +113,9 @@ def guestFileRemove(srcPath, flag):
     for filename in filenames:
         if(os.path.exists(srcPath + filename) and os.path.isfile(srcPath + filename)):
             os.remove(srcPath + filename)
-            time.sleep(0.1)
 
         elif(os.path.exists(srcPath + filename) and os.path.isdir(srcPath + filename)):
             shutil.rmtree(srcPath + filename)
-            time.sleep(0.1)
-
     
     i = 1
     while(os.path.exists(multiProfilePath + multiProfilenames[0] + str(i))):

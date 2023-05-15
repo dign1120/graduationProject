@@ -8,5 +8,3 @@ https://drive.google.com/drive/folders/1iGeIMtyNerFmwgeH0IjDih2O7LYLD-ih?usp=sha
 
 PIM_AGENT.exe is an executable file that executes the agent.
 When you run Start.vbs, PIM_AGENT.exe is registered in the startup program through SetStart.bat.
-
-

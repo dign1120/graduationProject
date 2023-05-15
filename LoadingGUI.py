@@ -44,9 +44,8 @@ class preGuestThread(QThread):
     def run(self):
         guestFileRemove(self.srcPath, 0)
         guestFileRemove(self.srcPath, 1)
-        time.sleep(3)
+        time.sleep(2)
         self.preGuest_signal.emit()
-
 
 
 class preMemThread(QThread):
@@ -62,7 +61,7 @@ class preMemThread(QThread):
         initLocalCheck(self.nickname, self.member_setting)
         time.sleep(1)
         self.preMem_signal.emit()
-    
+
 
 class encryptThread(QThread):
     encrypt_signal = pyqtSignal()
@@ -77,8 +76,8 @@ class encryptThread(QThread):
     def run(self):
         encrypt_all_files(self.dstPath, self.nickname)
         memberFileRemove(self.srcPath, self.nickname, self.member_setting)
-        time.sleep(1)
         self.encrypt_signal.emit()
+
 
 class EncryptLoadingClass(QDialog, encryptLoading_form_class):
 

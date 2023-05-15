@@ -1,9 +1,10 @@
 import psutil
 import time
 import keyboard
+import smtplib
+
 from PyQt5.QtWidgets import QSystemTrayIcon
 from ctypes import Structure, windll, c_uint, sizeof, byref
-import smtplib
 from email.message import EmailMessage
 from email.utils import formataddr
 
@@ -11,7 +12,6 @@ from CustomCrypto import encrypt_all_files
 from RunData import getSrcPath, getDstPath, memberFileMove, guestFileRemove, genCode
 from LoadingGUI import focusOnThread
 from DB_setting import getAgentEmail
-
 
 #input 여부 확인 -> input 없을시 타이머 시작 및 반환
 class LASTINPUTINFO(Structure):
@@ -28,36 +28,31 @@ def get_idle_duration():
 
     return millis / 1000.0
 
-var = 0
-acc = 0
-def runGuest(flag):
-    global var
-    global acc
+
+def runGuest(var, acc):
     check = 0
     prev = var
+
     for proc in psutil.process_iter():    # 실행중인 프로세스를 순차적으로 검색
         ps_name = proc.name()               # 프로세스 이름을 ps_name에 할당
+
         if ps_name == "chrome.exe":
             check = 1
             break
+
     var = check
-    var_sum = prev + var
-    acc += var_sum
-    if acc > 9:
-        acc = 1
-    if(check == 0 and flag == False and acc > 0):
-        if((int)(get_idle_duration()) >= 10):   # 타이머 설정
-            keyboard.press('alt')
-            keyboard.release('alt')
+    if acc < 8: #이상치 조정(최대 9)
+        acc += prev + var
+
+    if(check == 0  and acc > 0):
+        if((int)(get_idle_duration()) >= 60):   # 타이머 설정
             acc = 0
-            return True
-        return False
-    elif (check == 0 and flag == True):
-        return False
-    elif (check == 1 and flag == True):
-        return False
+
+            return var, acc, True
+
+        return var, acc, False
     else:
-        return False
+        return var, acc, False
 
 def runMem(flag):
     check = 0
@@ -69,16 +64,14 @@ def runMem(flag):
             check = 1
             break
 
-    if (check == 0 and flag == False):
-        # 파일 옮기기
-        if((int)(get_idle_duration()) >= 10):   # 타이머 설정
+    if(check == 0 and flag == False):
+        if((int)(get_idle_duration()) >= 60):   # 타이머 설정
             return True
         return False
-    elif (check==0 and flag == True):
+    elif(check == 0 and flag == True):
         return True
-    elif (check == 1):
+    else:
         return False
-    
 
 def trayGuest(flag):
     check = 0
@@ -92,7 +85,7 @@ def trayGuest(flag):
             break
 
     if(check == 0 and flag == False):
-        if((int)(get_idle_duration()) >= 10):   # 타이머 설정
+        if((int)(get_idle_duration()) >= 60):   # 타이머 설정
             emptyTrayicon = QSystemTrayIcon()
             emptyTrayicon.setVisible(False)
             emptyTrayicon.show()
@@ -106,7 +99,9 @@ def trayGuest(flag):
             focusThread.terminate()
             QSystemTrayIcon.showMessage(emptyTrayicon, "알림:", "개인정보를 삭제했습니다.", 1, 1000)
             keyboard.unhook_all()
+            
             return True
+
         return False
     elif (check == 0 and flag == True):
         return flag
@@ -120,16 +115,15 @@ def encryptInTrayIcon(srcPath, dstPath, nickname, member_setting):
     
     focusThread = focusOnThread()
     focusThread.start()
+
     QSystemTrayIcon.showMessage(emptyTrayicon, "알림:", "암호화 진행 중...", 1, 1000)
-    time.sleep(1)
     memberFileMove(srcPath, dstPath, nickname, member_setting) # 파일 옮기기
     encrypt_all_files(dstPath,nickname)
     QSystemTrayIcon.showMessage(emptyTrayicon, "알림:", "암호화가 완료되었습니다.", 1, 1000)
-    time.sleep(1)
+
     focusThread.terminate()
     emptyTrayicon.hide()
     keyboard.unhook_all()
-
 
 def trayMem(flag, nickname, member_setting):
     check = 0
@@ -143,17 +137,15 @@ def trayMem(flag, nickname, member_setting):
             check = 1
             break
 
-    if (check == 0 and flag == False):
-        # 파일 옮기기
-        if((int)(get_idle_duration()) >= 10):   # 타이머 설정
-            encryptInTrayIcon(srcPath, dstPath, nickname, member_setting) #암호화_트레이아이콘
+    if(check == 0 and flag == False):
+        if((int)(get_idle_duration()) >= 60):   # 타이머 설정
+            encryptInTrayIcon(srcPath, dstPath, nickname, member_setting)
             return True
         return False
-    elif (check==0 and flag == True):
+    elif(check == 0 and flag == True):
         return True
-    elif (check == 1):
+    else:
         return False
-    
 
 def sendMail(address):
 
